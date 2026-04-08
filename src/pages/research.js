@@ -305,6 +305,26 @@ export function initResearch() {
     const cursorEl  = document.getElementById(`cursor-${aiId}`);
 
     let rawText  = '';
+    let pendingRender = false;
+    let lastRenderAt = 0;
+
+    const renderStreamChunk = (force = false) => {
+      if (!contentEl) return;
+      const now = Date.now();
+      if (!force && now - lastRenderAt < 120) {
+        if (!pendingRender) {
+          pendingRender = true;
+          requestAnimationFrame(() => {
+            pendingRender = false;
+            renderStreamChunk(true);
+          });
+        }
+        return;
+      }
+      lastRenderAt = now;
+      contentEl.innerHTML = renderMarkdown(rawText);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    };
 
     try {
       const mode = document.getElementById('chat-mode')?.value || 'default';
@@ -329,15 +349,14 @@ export function initResearch() {
             const delta  = parsed.choices?.[0]?.delta?.content || '';
             if (delta) {
               rawText += delta;
-              if (contentEl) contentEl.innerHTML = renderMarkdown(rawText);
-              messagesEl.scrollTop = messagesEl.scrollHeight;
+              renderStreamChunk();
             }
           } catch {}
         }
       }
 
       // Final render — ensure complete markdown is rendered
-      if (contentEl && rawText) contentEl.innerHTML = renderMarkdown(rawText);
+      if (rawText) renderStreamChunk(true);
 
     } catch (e) {
       if (contentEl) contentEl.innerHTML = `<p class="text-error text-sm font-semibold">Error: ${escHtml(e.message)}</p>`;
