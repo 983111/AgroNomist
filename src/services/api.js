@@ -4,6 +4,8 @@
  */
 
 const WORKER_URL = 'https://agriintel-worker.vishwajeetadkine705.workers.dev';
+const RESEARCH_ASSISTANT_URL = 'https://researchassistant.vishwajeetadkine705.workers.dev';
+const LAB_WORKER_URL = 'https://lab.vishwajeetadkine705.workers.dev';
 
 // ─── Location & Language Store ────────────────────────────────────────────────
 
@@ -31,8 +33,8 @@ export function loadPrefs() {
 
 // ─── Core Fetch ───────────────────────────────────────────────────────────────
 
-async function post(path, body) {
-  const res = await fetch(`${WORKER_URL}${path}`, {
+async function post(path, body, baseUrl = WORKER_URL) {
+  const res = await fetch(`${baseUrl}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -64,7 +66,7 @@ export async function streamChat(message, context = '', language, mode = 'defaul
     language: language || userPrefs.language,
     mode,
     location: [userPrefs.city, userPrefs.district, userPrefs.country].filter(Boolean).join(', '),
-  }));
+  }), RESEARCH_ASSISTANT_URL);
   return res.body;
 }
 
@@ -87,8 +89,8 @@ export async function getMarketData({ crop, landAcres } = {}) {
   return res.json();
 }
 
-export async function runExperiment({ crop, soil, rainfall }) {
-  const res = await post('/api/experiment', withLocale({ crop, soil, rainfall }));
+export async function runExperiment({ crop, soil, district, rainfall }) {
+  const res = await post('/api/experiment', withLocale({ crop, soil, district, rainfall }), LAB_WORKER_URL);
   return res.json();
 }
 
