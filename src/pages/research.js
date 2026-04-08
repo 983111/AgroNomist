@@ -1,153 +1,209 @@
+import { streamChat } from '../services/api.js';
+
 export function renderResearch() {
   return `<main class="ml-64 pt-16 min-h-screen flex flex-col page-enter">
-    <div class="flex flex-1 overflow-hidden">
-      <!-- Experiment Sidebar -->
-      <section class="w-80 bg-surface-container-low p-8 overflow-y-auto">
-        <div class="space-y-8">
+    <div class="flex flex-1 overflow-hidden" style="height: calc(100vh - 64px)">
+      <!-- Config Sidebar -->
+      <section class="w-72 bg-surface-container-low p-6 overflow-y-auto border-r border-outline-variant/20 flex-shrink-0">
+        <div class="space-y-6">
           <div>
-            <h2 class="text-xs font-bold tracking-widest uppercase text-outline mb-6">Experiment Generator</h2>
-            <div class="space-y-4">
-              <div class="space-y-2">
-                <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant px-1">Crop Variant</label>
-                <select class="w-full bg-surface-container-lowest border-none rounded-xl text-sm py-3 px-4 shadow-sm focus:ring-2 focus:ring-secondary/20">
-                  <option>Cabernet Sauvignon (V-10)</option>
-                  <option>Merlot (A-04)</option>
-                  <option>Chardonnay (Heritage)</option>
+            <h2 class="text-xs font-bold tracking-widest uppercase text-outline mb-4">Configuration</h2>
+            <div class="space-y-3">
+              <div>
+                <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Mode</label>
+                <select id="chat-mode" class="w-full bg-surface-container-lowest border-none rounded-xl text-sm py-2.5 px-3 shadow-sm focus:ring-2 focus:ring-primary/20">
+                  <option value="default">General Advisor</option>
+                  <option value="experiment">Experiment Generator</option>
+                  <option value="hypothesis">Hypothesis Engine</option>
                 </select>
               </div>
-              <div class="space-y-2">
-                <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant px-1">Soil Composition</label>
-                <div class="flex flex-wrap gap-2">
-                  <span class="px-3 py-1 bg-primary-fixed text-on-primary-fixed rounded-full text-[10px] font-bold">Sandy Clay Loam</span>
-                  <span class="px-3 py-1 bg-surface-container-high text-outline rounded-full text-[10px] font-bold">Volcanic Ash</span>
-                </div>
+              <div>
+                <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Language</label>
+                <select id="chat-lang" class="w-full bg-surface-container-lowest border-none rounded-xl text-sm py-2.5 px-3 shadow-sm focus:ring-2 focus:ring-primary/20">
+                  <option value="en">English</option>
+                  <option value="hi">Hindi (हिंदी)</option>
+                  <option value="mr">Marathi (मराठी)</option>
+                </select>
               </div>
             </div>
           </div>
-          <div class="pt-8 border-t border-outline-variant/20">
-            <h3 class="text-xs font-bold tracking-widest uppercase text-outline mb-6">What-if Simulation</h3>
-            <div class="space-y-6">
-              <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                  <span class="text-xs font-semibold text-on-surface">Annual Rainfall</span>
-                  <span class="text-xs font-mono text-secondary">650mm</span>
-                </div>
-                <div class="relative w-full h-1.5 bg-surface-variant rounded-full">
-                  <div class="absolute left-0 top-0 h-full w-2/3 bg-gradient-to-r from-[#472d25] to-[#123b2a] rounded-full"></div>
-                  <div class="absolute left-2/3 top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md"></div>
-                </div>
-              </div>
-              <div class="flex items-center justify-between p-3 bg-surface-container-lowest rounded-xl shadow-sm">
-                <div class="flex items-center space-x-3">
-                  <span class="material-symbols-outlined text-secondary">opacity</span>
-                  <span class="text-xs font-semibold">Irrigation Pulse</span>
-                </div>
-                <div class="w-10 h-5 bg-primary-container rounded-full relative">
-                  <div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div>
-                </div>
-              </div>
-              <div class="flex items-center justify-between p-3 bg-surface-container-lowest rounded-xl shadow-sm">
-                <div class="flex items-center space-x-3">
-                  <span class="material-symbols-outlined text-tertiary">eco</span>
-                  <span class="text-xs font-semibold">Nitrogen Cycle</span>
-                </div>
-                <div class="w-10 h-5 bg-surface-variant rounded-full relative">
-                  <div class="absolute left-1 top-1 w-3 h-3 bg-white rounded-full"></div>
-                </div>
-              </div>
+
+          <div class="pt-4 border-t border-outline-variant/20">
+            <h3 class="text-xs font-bold tracking-widest uppercase text-outline mb-3">Quick Prompts</h3>
+            <div class="space-y-2" id="quick-prompts">
+              ${[
+                'What fertilizer should I use for cotton in black soil?',
+                'My soybean leaves are turning yellow. What disease?',
+                'Best time to sell onion this season?',
+                'How to apply for PM-KISAN loan?',
+                'Tips to increase yield by 20%?',
+                'Explain drip irrigation benefits',
+              ].map(q => `<button class="quick-prompt w-full text-left px-3 py-2 bg-surface-container-lowest rounded-xl text-xs text-on-surface-variant hover:bg-primary-fixed hover:text-primary transition-colors leading-relaxed">${q}</button>`).join('')}
             </div>
           </div>
-          <button class="w-full mt-4 py-4 bg-secondary text-on-secondary rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-secondary/20 hover:scale-[1.02] transition-transform">
-            Run New Simulation
-          </button>
-        </div>
-      </section>
-      <!-- Chat Area -->
-      <section class="flex-1 flex flex-col bg-surface relative overflow-hidden">
-        <div class="absolute inset-0 opacity-5 pointer-events-none">
-          <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAo2HMAY0DBiBlf99yDXWih9gbYLCSEyKw3eTrr0GTPsE8ayKsekRgX_-1OLoE7zGmDf12Xnk6xisAmwxdiackvctG9Dm6jkTT2ia0wrY-NLhTpQFYJCxhZ_qfPCNRSl3s-7-KIegGTlh9DjaTuMU6jvtNPcUE9aQBeFm3wWNT9XO3Psni2BJ5TFWjiGbyqd4IfmDGRUrDGYsu1BoJp7sguFwUOurHyVb_cwfjxDB8-qzTvcYx6QMMANEFhPxTURP1meBYU3FQCTuc"/>
-        </div>
-        <div class="flex-1 overflow-y-auto p-12 space-y-8 relative z-10">
-          <!-- AI Message -->
-          <div class="flex items-start space-x-6 max-w-4xl">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary-container flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
-              <span class="material-symbols-outlined text-white text-xl">auto_awesome</span>
-            </div>
-            <div class="space-y-4">
-              <div class="glass-panel p-8 rounded-2xl rounded-tl-none border border-white/40 shadow-sm">
-                <p class="text-lg font-medium leading-relaxed text-on-surface">
-                  Analysis complete for <span class="font-bold text-primary">Simulation_Alpha_9</span>. By adjusting the irrigation pulse to early morning cycles and maintaining a 650mm equivalent rainfall, we observe a <span class="text-secondary font-bold">14% increase</span> in Brix concentration potential.
-                </p>
-              </div>
-              <!-- Hypothesis Results -->
-              <div class="bg-surface-container-lowest rounded-3xl p-8 shadow-sm border border-outline-variant/10">
-                <div class="flex justify-between items-end mb-8">
-                  <div>
-                    <h3 class="font-headline text-3xl font-extrabold tracking-tighter text-primary">Yield Probability</h3>
-                    <p class="text-xs font-mono uppercase tracking-widest text-outline">Projected Harvest: Oct 12-20</p>
-                  </div>
-                  <div class="text-right">
-                    <span class="text-4xl font-black text-secondary">92.4<span class="text-xl">%</span></span>
-                    <p class="text-[10px] font-bold text-outline uppercase tracking-wider">Confidence Level</p>
-                  </div>
-                </div>
-                <div class="relative h-48 w-full bg-surface-container-low rounded-xl flex items-end overflow-hidden px-8 pb-4">
-                  <svg class="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 400 100">
-                    <path d="M0 80 Q 100 80, 200 20 T 400 50" fill="none" stroke="#2b5bb5" stroke-linecap="round" stroke-width="4"></path>
-                    <path d="M0 80 Q 100 80, 200 20 T 400 50 V 100 H 0 Z" fill="url(#grad1)" opacity="0.1"></path>
-                    <defs>
-                      <linearGradient id="grad1" x1="0%" x2="0%" y1="0%" y2="100%">
-                        <stop offset="0%" style="stop-color:#2b5bb5;stop-opacity:1"></stop>
-                        <stop offset="100%" style="stop-color:#2b5bb5;stop-opacity:0"></stop>
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  <div class="flex justify-between w-full relative z-10">
-                    <span class="text-[9px] font-bold text-outline">P0</span>
-                    <span class="text-[9px] font-bold text-secondary">PEAK YIELD</span>
-                    <span class="text-[9px] font-bold text-outline">P100</span>
-                  </div>
-                </div>
-                <div class="mt-8 grid grid-cols-2 gap-8">
-                  <div>
-                    <h4 class="text-xs font-bold uppercase tracking-widest text-primary mb-2 flex items-center">
-                      <span class="material-symbols-outlined text-sm mr-2">help</span> Why this works
-                    </h4>
-                    <p class="text-sm text-on-surface-variant leading-relaxed">The synergy between the Sandy Clay Loam moisture retention and the targeted Nitrogen spike triggers a defensive metabolite response, enriching grape phenolics without sacrificing overall biomass.</p>
-                  </div>
-                  <div class="bg-secondary-container/10 p-4 rounded-xl border border-secondary-container/20">
-                    <h4 class="text-[10px] font-black uppercase tracking-widest text-secondary mb-1">AI Recommendation</h4>
-                    <p class="text-xs text-on-secondary-container leading-tight">Apply the "High Stress" irrigation profile 48 hours prior to the heat window forecasted for Node_042.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- User Message -->
-          <div class="flex justify-end w-full">
-            <div class="bg-primary text-on-primary p-6 rounded-2xl rounded-tr-none shadow-lg max-w-xl">
-              <p class="text-sm font-medium">Explain the impact of the soil pH being 0.5 points higher in the North Block.</p>
-            </div>
-          </div>
-        </div>
-        <!-- Input Field -->
-        <div class="p-8 relative z-20">
-          <div class="max-w-4xl mx-auto glass-panel p-2 rounded-2xl shadow-xl border border-white/60 flex items-center">
-            <div class="flex space-x-1 px-4">
-              <button class="p-2 text-outline hover:text-primary transition-colors">
-                <span class="material-symbols-outlined">attachment</span>
-              </button>
-              <button class="p-2 text-outline hover:text-primary transition-colors">
-                <span class="material-symbols-outlined">mic</span>
-              </button>
-            </div>
-            <input class="flex-1 bg-transparent border-none focus:ring-0 text-sm py-4 px-2 placeholder:text-outline/60" placeholder="Ask K2 about your crop cycles..." type="text"/>
-            <button class="bg-primary text-on-primary h-12 w-12 rounded-xl flex items-center justify-center shadow-lg active:scale-95 transition-transform">
-              <span class="material-symbols-outlined">send</span>
+
+          <div class="pt-4 border-t border-outline-variant/20">
+            <button id="clear-chat" class="w-full py-2.5 border border-outline-variant rounded-xl text-xs font-bold text-outline hover:bg-error/10 hover:text-error hover:border-error/20 transition-colors flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-sm">delete</span> Clear Chat
             </button>
           </div>
         </div>
       </section>
+
+      <!-- Chat Area -->
+      <section class="flex-1 flex flex-col bg-surface min-w-0">
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-8 space-y-6">
+          <!-- Welcome -->
+          <div class="flex items-start gap-4 max-w-3xl">
+            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0 shadow-md">
+              <span class="material-symbols-outlined text-white text-base" style="font-variation-settings:'FILL' 1">smart_toy</span>
+            </div>
+            <div class="bg-surface-container-lowest p-5 rounded-2xl rounded-tl-none shadow-sm border border-outline-variant/10 max-w-2xl">
+              <p class="text-sm leading-relaxed text-on-surface">
+                Namaskar! 🌾 I'm <strong>K2 AgriIntel</strong>, your AI agriculture assistant. I can help you with:
+              </p>
+              <div class="mt-3 grid grid-cols-2 gap-2">
+                ${[
+                  ['coronavirus','Disease diagnosis'],
+                  ['trending_up','Market prices'],
+                  ['cloudy_snowing','Weather & risks'],
+                  ['layers','Soil & fertilizers'],
+                  ['biotech','Crop experiments'],
+                  ['account_balance','Govt schemes'],
+                ].map(([icon, label]) => `
+                  <div class="flex items-center gap-2 p-2 bg-surface-container-low rounded-lg">
+                    <span class="material-symbols-outlined text-primary text-sm">${icon}</span>
+                    <span class="text-xs font-medium text-on-surface-variant">${label}</span>
+                  </div>`).join('')}
+              </div>
+              <p class="text-sm mt-3 text-on-surface">Ask me anything in English, Hindi, or Marathi!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div class="p-6 border-t border-outline-variant/20 bg-surface">
+          <div class="max-w-3xl mx-auto flex items-end gap-3">
+            <div class="flex-1 bg-surface-container-low rounded-2xl border border-outline-variant/20 focus-within:border-primary/30 focus-within:ring-2 focus-within:ring-primary/10 transition-all">
+              <textarea id="chat-input"
+                rows="1"
+                class="w-full bg-transparent border-none resize-none text-sm py-3.5 px-4 placeholder:text-outline/60 focus:ring-0 max-h-32"
+                placeholder="Ask about crops, weather, market prices, disease…"
+              ></textarea>
+            </div>
+            <button id="send-btn" class="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center shadow-md hover:opacity-90 active:scale-95 transition-all flex-shrink-0 disabled:opacity-40">
+              <span class="material-symbols-outlined text-lg">send</span>
+            </button>
+          </div>
+          <p class="text-center text-[10px] text-outline mt-2">Powered by MBZUAI K2-Think-v2 • Press Enter to send</p>
+        </div>
+      </section>
     </div>
   </main>`;
+}
+
+export function initResearch() {
+  const messagesEl = document.getElementById('chat-messages');
+  const inputEl = document.getElementById('chat-input');
+  const sendBtn = document.getElementById('send-btn');
+  let history = [];
+  let isStreaming = false;
+
+  function addMessage(role, content, isStreaming = false) {
+    const id = `msg-${Date.now()}`;
+    const isUser = role === 'user';
+    const html = `
+      <div id="${id}" class="flex items-start gap-4 ${isUser ? 'justify-end' : ''} max-w-3xl ${isUser ? 'ml-auto' : ''}">
+        ${!isUser ? `<div class="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0 shadow-md">
+          <span class="material-symbols-outlined text-white text-base" style="font-variation-settings:'FILL' 1">smart_toy</span>
+        </div>` : ''}
+        <div class="${isUser
+          ? 'bg-primary text-white px-5 py-3 rounded-2xl rounded-tr-none shadow-md max-w-xl'
+          : 'bg-surface-container-lowest p-5 rounded-2xl rounded-tl-none shadow-sm border border-outline-variant/10 max-w-2xl flex-1'
+        }">
+          <div class="msg-content text-sm leading-relaxed ${isUser ? 'text-white' : 'text-on-surface'} whitespace-pre-wrap">${content}</div>
+          ${isStreaming ? '<span class="inline-block w-1.5 h-4 bg-primary animate-pulse ml-1 align-middle"></span>' : ''}
+        </div>
+      </div>`;
+    messagesEl.insertAdjacentHTML('beforeend', html);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return id;
+  }
+
+  async function send() {
+    const message = inputEl.value.trim();
+    if (!message || isStreaming) return;
+    isStreaming = true;
+    sendBtn.disabled = true;
+    inputEl.value = '';
+    inputEl.style.height = 'auto';
+
+    addMessage('user', message);
+    const context = history.slice(-6).map(m => `${m.role}: ${m.content}`).join('\n');
+    const aiId = addMessage('assistant', '', true);
+    const aiEl = document.getElementById(aiId);
+    const contentEl = aiEl?.querySelector('.msg-content');
+    const cursorEl = aiEl?.querySelector('.animate-pulse');
+
+    let fullText = '';
+    try {
+      const mode = document.getElementById('chat-mode')?.value || 'default';
+      const lang = document.getElementById('chat-lang')?.value || 'en';
+      const body = await streamChat(message, context, lang, mode);
+      const reader = body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const data = line.slice(6).trim();
+          if (data === '[DONE]') break;
+          try {
+            const parsed = JSON.parse(data);
+            const delta = parsed.choices?.[0]?.delta?.content || '';
+            if (delta) {
+              fullText += delta;
+              if (contentEl) contentEl.textContent = fullText;
+              messagesEl.scrollTop = messagesEl.scrollHeight;
+            }
+          } catch {}
+        }
+      }
+    } catch (e) {
+      if (contentEl) contentEl.textContent = `Error: ${e.message}`;
+    } finally {
+      cursorEl?.remove();
+      history.push({ role: 'user', content: message }, { role: 'assistant', content: fullText });
+      isStreaming = false;
+      sendBtn.disabled = false;
+      inputEl.focus();
+    }
+  }
+
+  sendBtn?.addEventListener('click', send);
+  inputEl?.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+  inputEl?.addEventListener('input', () => {
+    inputEl.style.height = 'auto';
+    inputEl.style.height = Math.min(inputEl.scrollHeight, 128) + 'px';
+  });
+
+  document.querySelectorAll('.quick-prompt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      inputEl.value = btn.textContent;
+      inputEl.focus();
+    });
+  });
+
+  document.getElementById('clear-chat')?.addEventListener('click', () => {
+    history = [];
+    messagesEl.innerHTML = '';
+  });
 }
