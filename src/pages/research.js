@@ -60,7 +60,7 @@ export function renderResearch() {
             </div>
             <div class="bg-surface-container-lowest p-5 rounded-2xl rounded-tl-none shadow-sm border border-outline-variant/10 max-w-2xl">
               <p class="text-sm leading-relaxed text-on-surface">
-                Namaskar! 🌾 I'm <strong>K2 AgriIntel</strong>, your AI agriculture assistant. I can help you with:
+                Namaskar! 🌾 I'm <strong>Agro Assistant</strong>, your AI agriculture assistant. I can help you with:
               </p>
               <div class="mt-3 grid grid-cols-2 gap-2">
                 ${[
@@ -95,7 +95,7 @@ export function renderResearch() {
               <span class="material-symbols-outlined text-lg">send</span>
             </button>
           </div>
-          <p class="text-center text-[10px] text-outline mt-2">Powered by MBZUAI K2-Think-v2 • Press Enter to send</p>
+          <p class="text-center text-[10px] text-outline mt-2">Powered by AgroNomist Assistant • Press Enter to send</p>
         </div>
       </section>
     </div>

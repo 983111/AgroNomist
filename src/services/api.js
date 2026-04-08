@@ -13,7 +13,7 @@ async function post(path, body) {
   return res;
 }
 
-// ─── K2 AI Endpoints ──────────────────────────────────────────────────────────
+// ─── Core AI Endpoints ─────────────────────────────────────────────────────────
 
 export async function streamChat(message, context = '', language = 'en', mode = 'default') {
   const res = await post('/api/chat', { message, context, language, mode });
@@ -60,7 +60,7 @@ export async function submitFeedback({ suggestionType, originalSuggestion, actua
   return res.json();
 }
 
-// ─── Serper Real-Time Endpoints ───────────────────────────────────────────────
+// ─── External Search Endpoints ─────────────────────────────────────────────────
 
 export async function getSerperWeather({ district, state = 'Maharashtra' }) {
   const res = await post('/api/serper/weather', { district, state });

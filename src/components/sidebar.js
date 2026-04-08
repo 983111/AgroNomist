@@ -29,12 +29,12 @@ export function renderSidebar(activePath) {
         <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings:'FILL' 1">agriculture</span>
         <h1 class="font-headline text-xl font-black text-primary tracking-tighter">AgriIntel</h1>
       </div>
-      <p class="font-body text-[10px] tracking-widest uppercase font-semibold text-outline">K2 Powered Platform</p>
+      <p class="font-body text-[10px] tracking-widest uppercase font-semibold text-outline">AI Powered Platform</p>
     </div>
     <nav class="flex-1 space-y-1">${navHTML}</nav>
     <div class="mt-auto px-6">
       <a href="#/research" class="w-full py-4 bg-primary text-white rounded-xl font-headline font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-lg text-sm">
-        <span class="material-symbols-outlined text-sm">smart_toy</span> K2 Assistant
+        <span class="material-symbols-outlined text-sm">smart_toy</span> Assistant
       </a>
     </div>
   </aside>`;
