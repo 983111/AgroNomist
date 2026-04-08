@@ -1,11 +1,11 @@
-import { getWeatherRisk, getMarketData } from '../services/api.js';
+import { getWeatherRisk, getMarketData, getSerperWeather, getSerperNews, getSerperMarket } from '../services/api.js';
 
 export function renderDashboard() {
   return `<main class="ml-64 mt-16 p-8 min-h-screen page-enter">
     <div class="mb-10 flex justify-between items-end">
       <div>
         <h2 class="font-headline text-4xl font-extrabold tracking-tight text-primary">Territory Overview</h2>
-        <p class="font-body text-outline mt-1 max-w-md text-sm">Real-time agriculture intelligence for your farm. AI-powered insights updated live.</p>
+        <p class="font-body text-outline mt-1 max-w-md text-sm">Real-time agriculture intelligence for your farm. Live data powered by Google Search.</p>
       </div>
       <div class="flex gap-2">
         <select id="dash-district" class="px-4 py-2 bg-surface-container-low border-none rounded-xl text-sm font-semibold text-primary focus:ring-2 focus:ring-primary/20">
@@ -18,6 +18,18 @@ export function renderDashboard() {
         <button id="refresh-dash" class="px-4 py-2 bg-primary text-on-primary rounded-xl text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity">
           <span class="material-symbols-outlined text-sm">refresh</span> Refresh
         </button>
+      </div>
+    </div>
+
+    <!-- Live Weather Banner -->
+    <div id="live-weather-banner" class="mb-8 bg-gradient-to-r from-primary to-primary-container rounded-2xl p-6 text-white shadow-lg">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="material-symbols-outlined text-primary-fixed text-sm">satellite_alt</span>
+        <span class="text-[10px] font-bold uppercase tracking-widest text-primary-fixed">Live Weather — Google Search</span>
+        <span class="ml-auto px-2 py-0.5 bg-white/20 rounded-full text-[10px] font-bold animate-pulse">● LIVE</span>
+      </div>
+      <div id="live-weather-content" class="grid grid-cols-4 gap-4">
+        ${[1,2,3,4].map(() => `<div class="p-3 bg-white/10 rounded-xl animate-pulse h-16"></div>`).join('')}
       </div>
     </div>
 
@@ -69,7 +81,7 @@ export function renderDashboard() {
       <div class="col-span-8 bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
         <div class="flex items-center justify-between mb-6">
           <h3 class="font-headline text-lg font-bold text-primary">Weather & Risk Intelligence</h3>
-          <span class="text-xs text-outline">Auto-updates on district change</span>
+          <span class="text-xs text-outline">AI-powered • Serper enriched</span>
         </div>
         <div id="weather-content" class="space-y-3">
           <div class="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl animate-pulse">
@@ -115,10 +127,13 @@ export function renderDashboard() {
         </a>
       </div>
 
-      <!-- Market Ticker -->
-      <div class="col-span-12 bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
-        <div class="flex items-center justify-between mb-6">
-          <h3 class="font-headline text-lg font-bold text-primary">Market Price Forecast</h3>
+      <!-- Real-time Market Prices from Serper -->
+      <div class="col-span-8 bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <h3 class="font-headline text-lg font-bold text-primary">Live Market Prices</h3>
+            <span class="px-2 py-0.5 bg-secondary/10 text-secondary text-[10px] font-bold rounded-full">REAL-TIME</span>
+          </div>
           <select id="dash-crop-select" class="px-3 py-2 bg-surface-container-low border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20">
             <option value="Soybean">Soybean</option>
             <option value="Cotton">Cotton</option>
@@ -127,6 +142,28 @@ export function renderDashboard() {
             <option value="Wheat">Wheat</option>
             <option value="Rice">Rice</option>
           </select>
+        </div>
+        <div id="serper-market-content" class="space-y-3">
+          ${[1,2,3].map(() => `<div class="p-4 bg-surface-container-low rounded-xl animate-pulse h-16"></div>`).join('')}
+        </div>
+      </div>
+
+      <!-- Agriculture News Feed -->
+      <div class="col-span-4 bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+        <div class="flex items-center gap-2 mb-4">
+          <h3 class="font-headline text-lg font-bold text-primary">Agri News</h3>
+          <span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full">GOOGLE NEWS</span>
+        </div>
+        <div id="news-feed" class="space-y-3 max-h-80 overflow-y-auto no-scrollbar">
+          ${[1,2,3,4].map(() => `<div class="p-3 bg-surface-container-low rounded-xl animate-pulse h-20"></div>`).join('')}
+        </div>
+      </div>
+
+      <!-- Market Forecast (AI) -->
+      <div class="col-span-12 bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="font-headline text-lg font-bold text-primary">AI Market Price Forecast</h3>
+          <span class="text-xs text-outline">K2 AI analysis enriched with real market data</span>
         </div>
         <div id="market-forecast-content">
           <div class="grid grid-cols-4 gap-4">
@@ -143,6 +180,115 @@ export function initDashboard() {
   const cropSel = document.getElementById('dash-crop-select');
   const refreshBtn = document.getElementById('refresh-dash');
 
+  // ─── Live Weather from Serper ──────────────────────────────
+  async function loadLiveWeather(district) {
+    const container = document.getElementById('live-weather-content');
+    container.innerHTML = [1,2,3,4].map(() => `<div class="p-3 bg-white/10 rounded-xl animate-pulse h-16"></div>`).join('');
+    try {
+      const data = await getSerperWeather({ district });
+      const ab = data.answerBox || {};
+      const snippets = data.weatherSnippets || [];
+
+      // Extract what we can from answer box
+      const temp = ab.answer || ab.title || '';
+      const conditions = ab.snippet || (snippets[0]?.snippet) || '';
+
+      container.innerHTML = `
+        <div class="p-3 bg-white/10 rounded-xl">
+          <p class="text-[10px] font-bold text-primary-fixed uppercase tracking-wider mb-1">Location</p>
+          <p class="font-headline text-lg font-black">${district}, MH</p>
+        </div>
+        <div class="p-3 bg-white/10 rounded-xl">
+          <p class="text-[10px] font-bold text-primary-fixed uppercase tracking-wider mb-1">Current</p>
+          <p class="font-headline text-lg font-black">${temp || '—'}</p>
+        </div>
+        <div class="col-span-2 p-3 bg-white/10 rounded-xl">
+          <p class="text-[10px] font-bold text-primary-fixed uppercase tracking-wider mb-1">Conditions</p>
+          <p class="text-sm leading-relaxed">${conditions || 'Fetching...'}</p>
+        </div>
+      `;
+    } catch {
+      container.innerHTML = `<div class="col-span-4 p-3 bg-white/10 rounded-xl"><p class="text-sm text-primary-fixed">Weather data unavailable</p></div>`;
+    }
+  }
+
+  // ─── Serper Market Prices ──────────────────────────────────
+  async function loadSerperMarket(crop, district) {
+    const container = document.getElementById('serper-market-content');
+    container.innerHTML = [1,2,3].map(() => `<div class="p-4 bg-surface-container-low rounded-xl animate-pulse h-16"></div>`).join('');
+    try {
+      const data = await getSerperMarket({ crop, district });
+
+      let html = '';
+
+      // Price answer box
+      if (data.priceAnswerBox) {
+        const pab = data.priceAnswerBox;
+        html += `
+          <div class="p-4 bg-primary-fixed/20 rounded-xl border border-primary/20">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="material-symbols-outlined text-primary text-sm">verified</span>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-primary">Google Price Data</span>
+            </div>
+            <p class="text-sm font-bold text-on-surface">${pab.answer || pab.snippet || pab.title || ''}</p>
+          </div>`;
+      }
+
+      // Price search results
+      if (data.priceResults?.length) {
+        html += data.priceResults.slice(0, 4).map(r => `
+          <a href="${r.link}" target="_blank" rel="noopener" class="block p-3 bg-surface-container-low rounded-xl hover:bg-surface-container transition-colors group">
+            <p class="text-sm font-bold text-primary group-hover:text-secondary transition-colors">${r.title}</p>
+            <p class="text-xs text-on-surface-variant mt-1 line-clamp-2">${r.snippet || ''}</p>
+            ${r.date ? `<p class="text-[10px] text-outline mt-1">${r.date}</p>` : ''}
+          </a>`).join('');
+      }
+
+      // Market news
+      if (data.newsResults?.length) {
+        html += `<p class="text-[10px] font-bold uppercase tracking-wider text-secondary mt-2 mb-1">Latest Market News</p>`;
+        html += data.newsResults.slice(0, 3).map(n => `
+          <a href="${n.link}" target="_blank" rel="noopener" class="flex gap-3 p-3 bg-secondary/5 rounded-xl hover:bg-secondary/10 transition-colors group">
+            ${n.imageUrl ? `<img src="${n.imageUrl}" class="w-14 h-14 rounded-lg object-cover flex-shrink-0" alt="" onerror="this.style.display='none'"/>` : ''}
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-bold text-on-surface group-hover:text-secondary transition-colors line-clamp-2">${n.title}</p>
+              <p class="text-[10px] text-outline mt-1">${n.source || ''} • ${n.date || ''}</p>
+            </div>
+          </a>`).join('');
+      }
+
+      container.innerHTML = html || '<p class="text-sm text-outline p-4">No market data found.</p>';
+    } catch {
+      container.innerHTML = '<p class="text-sm text-error p-4">Could not load live market data.</p>';
+    }
+  }
+
+  // ─── Agriculture News ──────────────────────────────────────
+  async function loadNews(district) {
+    const container = document.getElementById('news-feed');
+    container.innerHTML = [1,2,3,4].map(() => `<div class="p-3 bg-surface-container-low rounded-xl animate-pulse h-20"></div>`).join('');
+    try {
+      const data = await getSerperNews({ district });
+      if (data.news?.length) {
+        container.innerHTML = data.news.map(n => `
+          <a href="${n.link}" target="_blank" rel="noopener" class="block p-3 bg-surface-container-low rounded-xl hover:bg-surface-container transition-colors group">
+            <p class="text-xs font-bold text-primary group-hover:text-secondary transition-colors line-clamp-2">${n.title}</p>
+            <p class="text-[10px] text-on-surface-variant mt-1 line-clamp-2">${n.snippet || ''}</p>
+            <div class="flex items-center gap-2 mt-2">
+              <span class="text-[10px] text-outline">${n.source || ''}</span>
+              <span class="text-[10px] text-outline">•</span>
+              <span class="text-[10px] text-outline">${n.date || ''}</span>
+            </div>
+          </a>`).join('');
+      } else {
+        container.innerHTML = '<p class="text-sm text-outline p-3">No news available.</p>';
+      }
+    } catch {
+      container.innerHTML = '<p class="text-sm text-error p-3">News feed unavailable.</p>';
+    }
+  }
+
+  // ─── K2 Weather Intelligence ───────────────────────────────
   async function loadWeather(district) {
     document.getElementById('weather-content').innerHTML = `
       <div class="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl animate-pulse">
@@ -155,7 +301,21 @@ export function initDashboard() {
       document.getElementById('yield-score').textContent = data.yieldImpactScore ? `${data.yieldImpactScore}/100` : 'N/A';
       const severityMap = { critical: 'bg-error text-on-error', high: 'bg-error/20 text-error', medium: 'bg-tertiary-fixed text-tertiary', low: 'bg-primary-fixed text-primary' };
       document.getElementById('weather-badge').textContent = district;
-      document.getElementById('weather-content').innerHTML = (data.alerts || []).map(a => `
+
+      // Show current conditions if available
+      let currentHtml = '';
+      if (data.currentConditions) {
+        const cc = data.currentConditions;
+        currentHtml = `
+          <div class="grid grid-cols-4 gap-3 mb-3">
+            ${cc.temperature ? `<div class="p-3 bg-primary/5 rounded-xl text-center"><p class="text-[10px] font-bold text-outline uppercase">Temp</p><p class="font-headline font-black text-primary">${cc.temperature}</p></div>` : ''}
+            ${cc.humidity ? `<div class="p-3 bg-secondary/5 rounded-xl text-center"><p class="text-[10px] font-bold text-outline uppercase">Humidity</p><p class="font-headline font-black text-secondary">${cc.humidity}</p></div>` : ''}
+            ${cc.conditions ? `<div class="p-3 bg-tertiary/5 rounded-xl text-center"><p class="text-[10px] font-bold text-outline uppercase">Conditions</p><p class="text-sm font-bold text-tertiary">${cc.conditions}</p></div>` : ''}
+            ${cc.wind ? `<div class="p-3 bg-surface-container-low rounded-xl text-center"><p class="text-[10px] font-bold text-outline uppercase">Wind</p><p class="text-sm font-bold text-on-surface">${cc.wind}</p></div>` : ''}
+          </div>`;
+      }
+
+      document.getElementById('weather-content').innerHTML = currentHtml + (data.alerts || []).map(a => `
         <div class="flex items-start gap-3 p-4 ${severityMap[a.severity] || 'bg-surface-container-low text-on-surface'} rounded-xl">
           <span class="material-symbols-outlined text-lg mt-0.5">warning</span>
           <div class="flex-1">
@@ -177,6 +337,7 @@ export function initDashboard() {
     }
   }
 
+  // ─── K2 Market Forecast ────────────────────────────────────
   async function loadMarket(crop, district) {
     document.getElementById('market-forecast-content').innerHTML = `<div class="grid grid-cols-4 gap-4">${[1,2,3,4].map(() => `<div class="p-4 bg-surface-container-low rounded-xl animate-pulse h-20"></div>`).join('')}</div>`;
     try {
@@ -184,7 +345,6 @@ export function initDashboard() {
       document.getElementById('market-price').textContent = data.currentPrice ? `₹${data.currentPrice}` : '—';
       document.getElementById('market-badge').textContent = data.trend || '—';
       document.getElementById('sell-window').textContent = data.profitMaximizer?.bestTimeToSell || '—';
-      const trendColor = { up: 'text-primary', down: 'text-error', stable: 'text-secondary' };
       document.getElementById('market-forecast-content').innerHTML = `
         <div class="grid grid-cols-3 gap-4 mb-4">
           ${(data.forecast || []).map(f => `
@@ -196,7 +356,7 @@ export function initDashboard() {
           `).join('')}
         </div>
         <div class="p-4 bg-primary-fixed/20 rounded-xl">
-          <p class="text-xs font-bold text-primary mb-1">📊 Market Analysis</p>
+          <p class="text-xs font-bold text-primary mb-1">📊 AI Market Analysis</p>
           <p class="text-sm text-on-surface">${data.analysis || ''}</p>
           ${data.profitMaximizer ? `<p class="text-xs text-secondary mt-2 font-medium">💡 ${data.profitMaximizer.storageAdvice}</p>` : ''}
         </div>`;
@@ -208,10 +368,29 @@ export function initDashboard() {
   const district = () => districtSel?.value || 'Nanded';
   const crop = () => cropSel?.value || 'Soybean';
 
+  // Load everything
+  loadLiveWeather(district());
+  loadSerperMarket(crop(), district());
+  loadNews(district());
   loadWeather(district());
   loadMarket(crop(), district());
 
-  districtSel?.addEventListener('change', () => { loadWeather(district()); loadMarket(crop(), district()); });
-  cropSel?.addEventListener('change', () => loadMarket(crop(), district()));
-  refreshBtn?.addEventListener('click', () => { loadWeather(district()); loadMarket(crop(), district()); });
+  districtSel?.addEventListener('change', () => {
+    loadLiveWeather(district());
+    loadSerperMarket(crop(), district());
+    loadNews(district());
+    loadWeather(district());
+    loadMarket(crop(), district());
+  });
+  cropSel?.addEventListener('change', () => {
+    loadSerperMarket(crop(), district());
+    loadMarket(crop(), district());
+  });
+  refreshBtn?.addEventListener('click', () => {
+    loadLiveWeather(district());
+    loadSerperMarket(crop(), district());
+    loadNews(district());
+    loadWeather(district());
+    loadMarket(crop(), district());
+  });
 }
