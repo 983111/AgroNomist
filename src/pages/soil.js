@@ -1,4 +1,4 @@
-import { getSoilIntelligence } from '../services/api.js';
+import { getSoilIntelligence, getSerperNews, getSerperPlaces } from '../services/api.js';
 
 export function renderSoil() {
   return `<main class="ml-64 pt-16 min-h-screen page-enter">
@@ -62,6 +62,28 @@ export function renderSoil() {
         </details>
       </div>
 
+      <!-- Crop Intelligence News -->
+      <div class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10 mb-8">
+        <div class="flex items-center gap-2 mb-4">
+          <h3 class="font-headline text-lg font-bold text-primary">Crop Intelligence News</h3>
+          <span class="px-2 py-0.5 bg-secondary/10 text-secondary text-[10px] font-bold rounded-full">GOOGLE NEWS</span>
+        </div>
+        <div id="crop-news" class="grid grid-cols-4 gap-4">
+          ${[1,2,3,4].map(() => `<div class="p-3 bg-surface-container-low rounded-xl animate-pulse h-24"></div>`).join('')}
+        </div>
+      </div>
+
+      <!-- Nearby Soil Testing Labs -->
+      <div class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10 mb-8">
+        <div class="flex items-center gap-2 mb-4">
+          <h3 class="font-headline text-lg font-bold text-primary">Nearby Soil Testing Labs</h3>
+          <span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full">GOOGLE PLACES</span>
+        </div>
+        <div id="soil-labs" class="grid grid-cols-3 gap-4">
+          ${[1,2,3].map(() => `<div class="p-4 bg-surface-container-low rounded-xl animate-pulse h-32"></div>`).join('')}
+        </div>
+      </div>
+
       <!-- Loading -->
       <div id="soil-loading" class="hidden py-20 text-center">
         <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -79,10 +101,91 @@ export function renderSoil() {
   </main>`;
 }
 
+function renderStars(rating) {
+  if (!rating) return '';
+  const full = Math.floor(rating);
+  let stars = '';
+  for (let i = 0; i < full; i++) stars += '★';
+  if (rating % 1 >= 0.5) stars += '½';
+  return stars;
+}
+
 export function initSoil() {
+  function getDistrict() {
+    return document.getElementById('soil-district')?.value || 'Nanded';
+  }
+  function getCrop() {
+    return document.getElementById('soil-crop')?.value || '';
+  }
+
+  // ─── Crop News from Serper ─────────────────────────────────
+  async function loadCropNews() {
+    const container = document.getElementById('crop-news');
+    container.innerHTML = [1,2,3,4].map(() => `<div class="p-3 bg-surface-container-low rounded-xl animate-pulse h-24"></div>`).join('');
+    const district = getDistrict();
+    const crop = getCrop();
+    try {
+      const data = await getSerperNews({
+        district,
+        crop: crop || undefined,
+        topic: 'soil crop agriculture farming advisory',
+      });
+      if (data.news?.length) {
+        container.innerHTML = data.news.slice(0, 4).map(n => `
+          <a href="${n.link}" target="_blank" rel="noopener" class="block p-3 bg-surface-container-low rounded-xl hover:bg-surface-container transition-colors group">
+            ${n.imageUrl ? `<img src="${n.imageUrl}" class="w-full h-20 rounded-lg object-cover mb-2" alt="" onerror="this.style.display='none'"/>` : ''}
+            <p class="text-xs font-bold text-primary group-hover:text-secondary transition-colors line-clamp-2">${n.title}</p>
+            <div class="flex items-center gap-2 mt-2">
+              <span class="text-[10px] text-outline">${n.source || ''}</span>
+              <span class="text-[10px] text-outline">•</span>
+              <span class="text-[10px] text-outline">${n.date || ''}</span>
+            </div>
+          </a>`).join('');
+      } else {
+        container.innerHTML = '<p class="text-sm text-outline col-span-4">No crop news available.</p>';
+      }
+    } catch {
+      container.innerHTML = '<p class="text-sm text-error col-span-4">News unavailable.</p>';
+    }
+  }
+
+  // ─── Nearby Soil Testing Labs from Serper ──────────────────
+  async function loadSoilLabs() {
+    const container = document.getElementById('soil-labs');
+    container.innerHTML = [1,2,3].map(() => `<div class="p-4 bg-surface-container-low rounded-xl animate-pulse h-32"></div>`).join('');
+    const district = getDistrict();
+    try {
+      const data = await getSerperPlaces({ district, category: 'soil-testing' });
+      if (data.places?.length) {
+        container.innerHTML = data.places.slice(0, 6).map(p => `
+          <div class="bg-surface-container-low p-4 rounded-xl hover:shadow-md transition-shadow">
+            <div class="flex items-start gap-3 mb-2">
+              <div class="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-primary text-sm">biotech</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="text-sm font-bold text-primary line-clamp-1">${p.title}</h4>
+                ${p.rating ? `<div class="flex items-center gap-1 mt-0.5"><span class="text-xs font-bold text-primary">${p.rating}</span><span class="text-[10px] text-yellow-600">${renderStars(p.rating)}</span>${p.reviews ? `<span class="text-[10px] text-outline">(${p.reviews})</span>` : ''}</div>` : ''}
+              </div>
+            </div>
+            ${p.address ? `<p class="text-xs text-on-surface-variant mb-2 line-clamp-2"><span class="material-symbols-outlined text-[10px] mr-1">location_on</span>${p.address}</p>` : ''}
+            <div class="flex gap-2">
+              ${p.phone ? `<a href="tel:${p.phone}" class="flex-1 py-1.5 bg-secondary/10 text-secondary rounded-lg text-[10px] font-bold text-center hover:bg-secondary/20 transition-colors">Call</a>` : ''}
+              ${p.cid ? `<a href="https://www.google.com/maps?cid=${p.cid}" target="_blank" rel="noopener" class="flex-1 py-1.5 bg-primary/10 text-primary rounded-lg text-[10px] font-bold text-center hover:bg-primary/20 transition-colors">Maps</a>` : ''}
+            </div>
+          </div>`).join('');
+      } else {
+        container.innerHTML = '<p class="text-sm text-outline col-span-3">No soil testing labs found nearby. Try selecting a different district.</p>';
+      }
+    } catch {
+      container.innerHTML = '<p class="text-sm text-error col-span-3">Could not load nearby labs.</p>';
+    }
+  }
+
+  // ─── AI Soil Analysis ──────────────────────────────────────
   document.getElementById('analyze-soil')?.addEventListener('click', async () => {
-    const district = document.getElementById('soil-district')?.value;
-    const crop = document.getElementById('soil-crop')?.value;
+    const district = getDistrict();
+    const crop = getCrop();
     const season = document.getElementById('soil-season')?.value;
     const ph = document.getElementById('soil-ph')?.value;
     const n = document.getElementById('soil-n')?.value;
@@ -190,4 +293,14 @@ export function initSoil() {
       document.getElementById('soil-results').innerHTML = `<div class="py-12 text-center"><p class="text-error font-bold">Error: ${e.message}</p></div>`;
     }
   });
+
+  // Reload serper data on district change
+  document.getElementById('soil-district')?.addEventListener('change', () => {
+    loadCropNews();
+    loadSoilLabs();
+  });
+
+  // Initial load of serper data
+  loadCropNews();
+  loadSoilLabs();
 }
