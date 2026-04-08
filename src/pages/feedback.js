@@ -1,173 +1,111 @@
+import { submitFeedback } from '../services/api.js';
+
 export function renderFeedback() {
-  return `<main class="ml-64 pt-24 px-8 pb-12 min-h-screen page-enter">
-    <div class="max-w-[1400px] mx-auto">
-      <!-- Header -->
-      <div class="flex justify-between items-end mb-12">
+  return `<main class="ml-64 pt-16 min-h-screen page-enter">
+    <div class="p-8 max-w-7xl mx-auto">
+      <div class="flex justify-between items-end mb-8">
         <div>
-          <span class="font-label text-[10px] tracking-[0.2em] uppercase font-bold text-secondary block mb-2">Continuous Learning System</span>
-          <h2 class="font-headline text-5xl font-extrabold text-primary tracking-tight">Feedback Loop</h2>
-          <p class="text-on-surface-variant text-lg mt-2 font-medium max-w-xl">Verify AI suggestions against real-world outcomes. Your data makes the model smarter for everyone.</p>
-        </div>
-        <div class="flex gap-3">
-          <button class="px-6 py-3 bg-surface-container-high text-primary rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-surface-variant transition-colors">
-            <span class="material-symbols-outlined text-sm">history</span> History
-          </button>
-          <button class="px-6 py-3 bg-primary text-on-primary rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg hover:opacity-90 transition-opacity">
-            <span class="material-symbols-outlined text-sm">add</span> Log New Harvest
-          </button>
+          <span class="text-[10px] tracking-[0.2em] uppercase font-bold text-secondary">Continuous Learning System</span>
+          <h2 class="font-headline text-4xl font-extrabold text-primary tracking-tight mt-1">Feedback Loop</h2>
+          <p class="text-on-surface-variant mt-1">Verify AI suggestions against real-world outcomes. Your data makes the model smarter.</p>
         </div>
       </div>
-      <div class="grid grid-cols-12 gap-8">
-        <!-- Intelligence Growth -->
-        <div class="col-span-12 grid grid-cols-4 gap-4 mb-4">
-          <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-20 h-20 bg-primary-fixed/20 rounded-full -mr-6 -mt-6 blur-xl"></div>
-            <p class="text-[10px] font-bold text-outline uppercase tracking-wider mb-2">AI Accuracy</p>
-            <div class="flex items-baseline gap-1">
-              <span class="text-3xl font-headline font-black text-primary">94.2</span>
-              <span class="text-lg font-bold text-primary">%</span>
-            </div>
-            <div class="mt-3 flex items-center gap-1">
-              <span class="material-symbols-outlined text-primary text-sm">trending_up</span>
-              <span class="text-xs font-bold text-primary">+2.4% this season</span>
-            </div>
-          </div>
-          <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm">
-            <p class="text-[10px] font-bold text-outline uppercase tracking-wider mb-2">Verified Predictions</p>
-            <div class="flex items-baseline gap-1">
-              <span class="text-3xl font-headline font-black text-primary">1,247</span>
-            </div>
-            <div class="mt-3 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
-              <div class="bg-primary h-full" style="width:78%"></div>
-            </div>
-            <p class="text-[10px] text-outline mt-1">78% success rate</p>
-          </div>
-          <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm">
-            <p class="text-[10px] font-bold text-outline uppercase tracking-wider mb-2">User Contributions</p>
-            <div class="flex items-baseline gap-1">
-              <span class="text-3xl font-headline font-black text-primary">3,842</span>
-            </div>
-            <div class="mt-3 flex items-center gap-1">
-              <span class="material-symbols-outlined text-secondary text-sm">groups</span>
-              <span class="text-xs font-bold text-secondary">From 847 farmers</span>
-            </div>
-          </div>
-          <div class="bg-primary text-on-primary p-6 rounded-xl shadow-xl">
-            <p class="text-[10px] font-bold text-primary-fixed uppercase tracking-wider mb-2">Model Version</p>
-            <div class="flex items-baseline gap-2">
-              <span class="text-3xl font-headline font-black">K2 v4.2</span>
-            </div>
-            <p class="text-xs text-primary-fixed-dim mt-3">Last trained: 6 hours ago</p>
-          </div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-4 gap-4 mb-8">
+        <div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm">
+          <p class="text-[10px] font-bold text-outline uppercase tracking-wider mb-1">AI Accuracy</p>
+          <p class="font-headline text-3xl font-black text-primary">94.2%</p>
+          <p class="text-xs text-primary mt-1">+2.4% this season</p>
         </div>
-        <!-- Harvest Log Form -->
-        <div class="col-span-8 bg-surface-container-lowest p-8 rounded-xl shadow-sm">
-          <div class="flex items-center gap-3 mb-8">
+        <div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm">
+          <p class="text-[10px] font-bold text-outline uppercase tracking-wider mb-1">Verified Predictions</p>
+          <p class="font-headline text-3xl font-black text-primary">1,247</p>
+          <div class="mt-2 h-1.5 bg-surface-container-high rounded-full"><div class="bg-primary h-full" style="width:78%"></div></div>
+        </div>
+        <div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm">
+          <p class="text-[10px] font-bold text-outline uppercase tracking-wider mb-1">Contributions</p>
+          <p class="font-headline text-3xl font-black text-primary">3,842</p>
+          <p class="text-xs text-secondary mt-1">From 847 farmers</p>
+        </div>
+        <div class="bg-primary text-white p-5 rounded-xl shadow-lg">
+          <p class="text-[10px] font-bold text-primary-fixed uppercase tracking-wider mb-1">Model Version</p>
+          <p class="font-headline text-3xl font-black">K2 v2</p>
+          <p class="text-xs text-primary-fixed-dim mt-1">MBZUAI K2-Think-v2</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-12 gap-8">
+        <!-- Form -->
+        <div class="col-span-8 bg-surface-container-lowest p-8 rounded-2xl shadow-sm">
+          <div class="flex items-center gap-3 mb-6">
             <div class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center">
               <span class="material-symbols-outlined text-on-primary-container">edit_note</span>
             </div>
             <div>
-              <h3 class="font-headline text-xl font-bold text-primary">Log Harvest Outcome</h3>
-              <p class="text-xs text-outline">Compare AI prediction vs actual results</p>
+              <h3 class="font-headline text-xl font-bold text-primary">Log Outcome & Verify AI</h3>
+              <p class="text-xs text-outline">Tell K2 how the suggestion worked in reality</p>
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-8">
-            <div class="space-y-6">
-              <div class="space-y-2">
-                <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant px-1">Crop & Block</label>
-                <select class="w-full bg-surface-container-low border-none rounded-xl text-sm py-3 px-4 focus:ring-2 focus:ring-primary/20">
-                  <option>Thompson Grapes - Block 7</option>
-                  <option>Cabernet Sauvignon - Block 4</option>
-                  <option>Pomegranate - Block 12</option>
+
+          <div class="grid grid-cols-2 gap-6">
+            <div class="space-y-4">
+              <div>
+                <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Suggestion Type</label>
+                <select id="fb-type" class="w-full bg-surface-container-low border-none rounded-xl text-sm py-2.5 px-3 focus:ring-2 focus:ring-primary/20">
+                  <option value="soil">Soil / Fertilizer</option>
+                  <option value="experiment">Experiment / Method</option>
+                  <option value="market">Market / Selling</option>
+                  <option value="disease">Disease Treatment</option>
+                  <option value="weather">Weather Advisory</option>
                 </select>
               </div>
-              <div class="space-y-2">
-                <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant px-1">Actual Yield (MT/ha)</label>
-                <input class="w-full bg-surface-container-low border-none rounded-xl text-sm py-3 px-4 focus:ring-2 focus:ring-primary/20" placeholder="e.g., 12.4" type="number"/>
+              <div>
+                <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Crop</label>
+                <select id="fb-crop" class="w-full bg-surface-container-low border-none rounded-xl text-sm py-2.5 px-3 focus:ring-2 focus:ring-primary/20">
+                  <option>Soybean</option><option>Cotton</option><option>Wheat</option><option>Rice</option>
+                  <option>Tur Dal</option><option>Onion</option><option>Pomegranate</option>
+                </select>
               </div>
-              <div class="space-y-2">
-                <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant px-1">Quality Grade</label>
-                <div class="flex gap-2">
-                  <button class="flex-1 py-3 bg-primary text-on-primary rounded-xl text-xs font-bold">Grade A</button>
-                  <button class="flex-1 py-3 bg-surface-container-low text-on-surface-variant rounded-xl text-xs font-bold hover:bg-surface-container-high transition-colors">Grade B</button>
-                  <button class="flex-1 py-3 bg-surface-container-low text-on-surface-variant rounded-xl text-xs font-bold hover:bg-surface-container-high transition-colors">Grade C</button>
-                </div>
+              <div>
+                <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">District</label>
+                <select id="fb-district" class="w-full bg-surface-container-low border-none rounded-xl text-sm py-2.5 px-3 focus:ring-2 focus:ring-primary/20">
+                  <option>Nanded</option><option>Nashik</option><option>Pune</option><option>Latur</option>
+                </select>
               </div>
-              <div class="space-y-2">
-                <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant px-1">Did you follow AI recommendations?</label>
-                <div class="flex gap-2">
-                  <button class="flex-1 py-3 bg-primary-fixed text-primary rounded-xl text-xs font-bold">Yes, fully</button>
-                  <button class="flex-1 py-3 bg-surface-container-low text-on-surface-variant rounded-xl text-xs font-bold">Partially</button>
-                  <button class="flex-1 py-3 bg-surface-container-low text-on-surface-variant rounded-xl text-xs font-bold">No</button>
-                </div>
+              <div>
+                <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Original AI Suggestion (optional)</label>
+                <textarea id="fb-original" rows="3" placeholder="Paste the AI suggestion here..." class="w-full bg-surface-container-low border-none rounded-xl text-sm py-2.5 px-3 resize-none focus:ring-2 focus:ring-primary/20"></textarea>
               </div>
             </div>
-            <!-- AI vs Actual Comparison -->
-            <div class="space-y-6">
-              <div class="bg-surface-container-low p-6 rounded-xl">
-                <div class="flex justify-between items-center mb-4">
-                  <span class="text-xs font-bold text-outline uppercase tracking-wider">AI Predicted</span>
-                  <span class="text-xs font-bold text-outline uppercase tracking-wider">Actual</span>
-                </div>
-                <div class="space-y-6">
-                  <div>
-                    <div class="flex justify-between mb-2">
-                      <span class="text-sm font-bold text-secondary">12.4 MT/ha</span>
-                      <span class="text-sm font-bold text-primary">—</span>
-                    </div>
-                    <div class="h-2 bg-surface-variant rounded-full overflow-hidden relative">
-                      <div class="absolute top-0 left-0 h-full bg-secondary/40 w-[75%]"></div>
-                    </div>
-                    <p class="text-[10px] text-outline mt-1">Yield Volume</p>
-                  </div>
-                  <div>
-                    <div class="flex justify-between mb-2">
-                      <span class="text-sm font-bold text-secondary">24.5°Bx</span>
-                      <span class="text-sm font-bold text-primary">—</span>
-                    </div>
-                    <div class="h-2 bg-surface-variant rounded-full overflow-hidden relative">
-                      <div class="absolute top-0 left-0 h-full bg-secondary/40 w-[82%]"></div>
-                    </div>
-                    <p class="text-[10px] text-outline mt-1">Sugar Content (Brix)</p>
-                  </div>
-                  <div>
-                    <div class="flex justify-between mb-2">
-                      <span class="text-sm font-bold text-secondary">Grade A</span>
-                      <span class="text-sm font-bold text-primary">—</span>
-                    </div>
-                    <div class="h-2 bg-surface-variant rounded-full overflow-hidden relative">
-                      <div class="absolute top-0 left-0 h-full bg-secondary/40 w-[90%]"></div>
-                    </div>
-                    <p class="text-[10px] text-outline mt-1">Quality Assessment</p>
-                  </div>
-                </div>
+            <div class="space-y-4">
+              <div>
+                <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Actual Outcome <span class="text-error">*</span></label>
+                <textarea id="fb-outcome" rows="4" placeholder="Describe what actually happened: yield, quality, effectiveness of treatment, actual market price..." class="w-full bg-surface-container-low border-none rounded-xl text-sm py-2.5 px-3 resize-none focus:ring-2 focus:ring-primary/20" required></textarea>
               </div>
-              <div class="space-y-2">
-                <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant px-1">Additional Notes</label>
-                <textarea class="w-full bg-surface-container-low border-none rounded-xl text-sm py-3 px-4 h-24 resize-none focus:ring-2 focus:ring-primary/20" placeholder="Any observations about weather impact, pest issues, etc..."></textarea>
-              </div>
-              <button class="w-full py-4 bg-primary text-on-primary rounded-xl font-headline font-bold text-sm shadow-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+              <button id="submit-fb" class="w-full py-4 bg-primary text-white rounded-xl font-headline font-bold shadow-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-sm">upload</span> Submit Feedback to K2
               </button>
             </div>
           </div>
         </div>
-        <!-- Performance Timeline -->
-        <div class="col-span-4 space-y-6">
-          <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm">
-            <h3 class="font-headline text-lg font-bold text-primary mb-6">Performance Timeline</h3>
-            <div class="space-y-6">
+
+        <!-- Timeline -->
+        <div class="col-span-4 space-y-4">
+          <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm">
+            <h3 class="font-headline text-base font-bold text-primary mb-4">Season Performance</h3>
+            <div class="space-y-3">
               ${[
-                {season:'Kharif 2024',pred:'12.4',actual:'11.8',acc:'95.2',color:'primary'},
-                {season:'Rabi 2023-24',pred:'10.2',actual:'10.8',acc:'94.1',color:'secondary'},
-                {season:'Kharif 2023',pred:'9.8',actual:'8.4',acc:'85.7',color:'tertiary'},
+                { season: 'Kharif 2024', pred: '12.4', actual: '11.8', acc: '95.2', color: 'primary' },
+                { season: 'Rabi 2023-24', pred: '10.2', actual: '10.8', acc: '94.1', color: 'secondary' },
+                { season: 'Kharif 2023', pred: '9.8', actual: '8.4', acc: '85.7', color: 'tertiary' },
               ].map(s => `
                 <div class="p-4 bg-surface-container-low rounded-xl">
-                  <div class="flex justify-between items-center mb-3">
+                  <div class="flex justify-between items-center mb-2">
                     <span class="text-xs font-bold text-${s.color} uppercase tracking-wider">${s.season}</span>
-                    <span class="text-[10px] font-bold text-outline">${s.acc}% accuracy</span>
+                    <span class="text-[10px] font-bold text-outline">${s.acc}%</span>
                   </div>
-                  <div class="grid grid-cols-2 gap-3 text-center">
+                  <div class="grid grid-cols-2 gap-2 text-center">
                     <div class="bg-surface-container-lowest p-2 rounded-lg">
                       <p class="text-[10px] text-outline uppercase">Predicted</p>
                       <p class="text-sm font-headline font-black text-${s.color}">${s.pred}</p>
@@ -177,31 +115,57 @@ export function renderFeedback() {
                       <p class="text-sm font-headline font-black text-on-surface">${s.actual}</p>
                     </div>
                   </div>
-                </div>
-              `).join('')}
+                </div>`).join('')}
             </div>
           </div>
-          <div class="glass-panel p-6 rounded-xl border border-white/40 shadow-xl relative overflow-hidden">
-            <div class="absolute -bottom-8 -right-8 w-32 h-32 bg-secondary/10 rounded-full blur-2xl"></div>
-            <div class="relative z-10">
-              <div class="flex items-center gap-2 mb-4">
-                <span class="material-symbols-outlined text-secondary">psychology</span>
-                <span class="text-[10px] font-bold text-secondary uppercase tracking-widest">Model Insight</span>
-              </div>
-              <p class="text-sm text-on-surface leading-relaxed mb-4">Your feedback has improved K2's prediction accuracy by <span class="font-bold text-primary">+8.5%</span> over 3 seasons. The model has learned specific patterns for your micro-climate conditions.</p>
-              <div class="flex gap-4 text-[10px]">
-                <div class="flex items-center gap-1 text-primary font-bold"><span class="w-2 h-2 rounded-full bg-primary"></span> Your Farm</div>
-                <div class="flex items-center gap-1 text-outline font-bold"><span class="w-2 h-2 rounded-full bg-outline"></span> Regional Avg</div>
-              </div>
-              <div class="h-20 flex items-end gap-1 mt-4">
-                ${[40,45,55,48,60,65,58,72,68,78,82,85].map((v,i) => 
-                  `<div class="flex-1 ${i >= 8 ? 'bg-primary' : 'bg-primary/30'} rounded-t-sm" style="height:${v}%"></div>`
-                ).join('')}
-              </div>
+          <div id="fb-response" class="hidden bg-primary text-white p-6 rounded-2xl shadow-lg">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="material-symbols-outlined text-primary-fixed">psychology</span>
+              <span class="text-xs font-bold uppercase tracking-widest text-primary-fixed">K2 Analysis</span>
             </div>
+            <div id="fb-response-content" class="text-sm text-primary-fixed-dim leading-relaxed space-y-2"></div>
           </div>
         </div>
       </div>
     </div>
   </main>`;
+}
+
+export function initFeedback() {
+  document.getElementById('submit-fb')?.addEventListener('click', async () => {
+    const outcome = document.getElementById('fb-outcome')?.value?.trim();
+    if (!outcome) { alert('Please describe the actual outcome.'); return; }
+
+    const btn = document.getElementById('submit-fb');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Submitting…';
+
+    try {
+      const data = await submitFeedback({
+        suggestionType: document.getElementById('fb-type')?.value,
+        originalSuggestion: document.getElementById('fb-original')?.value || '',
+        actualOutcome: outcome,
+        crop: document.getElementById('fb-crop')?.value,
+        district: document.getElementById('fb-district')?.value,
+      });
+
+      const respEl = document.getElementById('fb-response');
+      const contEl = document.getElementById('fb-response-content');
+      const accMap = { accurate: '✅ Accurate', 'partially-accurate': '⚠️ Partially Accurate', inaccurate: '❌ Inaccurate' };
+      contEl.innerHTML = `
+        <p class="font-bold text-white mb-2">${accMap[data.accuracyAssessment] || data.accuracyAssessment}</p>
+        ${data.gap ? `<p><span class="font-bold">Gap: </span>${data.gap}</p>` : ''}
+        ${data.revisedRecommendation ? `<p class="mt-2"><span class="font-bold">Revised advice: </span>${data.revisedRecommendation}</p>` : ''}
+        ${data.learningNote ? `<p class="mt-2 text-primary-fixed-dim">${data.learningNote}</p>` : ''}
+      `;
+      respEl.classList.remove('hidden');
+      document.getElementById('fb-outcome').value = '';
+      document.getElementById('fb-original').value = '';
+    } catch (e) {
+      alert('Error: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<span class="material-symbols-outlined text-sm">upload</span> Submit Feedback to K2';
+    }
+  });
 }
