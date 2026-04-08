@@ -1,4 +1,4 @@
-import { getWeatherRisk } from '../services/api.js';
+import { getWeatherRisk, getSerperWeather, getSerperNews } from '../services/api.js';
 
 export function renderWeather() {
   return `<main class="ml-64 pt-16 min-h-screen page-enter">
@@ -22,15 +22,38 @@ export function renderWeather() {
         </div>
       </div>
 
+      <!-- Live Weather from Google -->
+      <div id="live-wx-banner" class="mb-8 bg-gradient-to-r from-primary to-primary-container rounded-2xl p-6 text-white shadow-lg">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="material-symbols-outlined text-primary-fixed text-sm">satellite_alt</span>
+          <span class="text-[10px] font-bold uppercase tracking-widest text-primary-fixed">Live Weather — Google Search</span>
+          <span class="ml-auto px-2 py-0.5 bg-white/20 rounded-full text-[10px] font-bold animate-pulse">● LIVE</span>
+        </div>
+        <div id="live-wx-content" class="grid grid-cols-3 gap-4">
+          ${[1,2,3].map(() => `<div class="p-4 bg-white/10 rounded-xl animate-pulse h-20"></div>`).join('')}
+        </div>
+      </div>
+
+      <!-- Weather News -->
+      <div id="wx-news-section" class="mb-8 bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+        <div class="flex items-center gap-2 mb-4">
+          <h3 class="font-headline text-lg font-bold text-primary">Weather & Agriculture News</h3>
+          <span class="px-2 py-0.5 bg-secondary/10 text-secondary text-[10px] font-bold rounded-full">GOOGLE NEWS</span>
+        </div>
+        <div id="wx-news-content" class="grid grid-cols-3 gap-4">
+          ${[1,2,3].map(() => `<div class="p-4 bg-surface-container-low rounded-xl animate-pulse h-24"></div>`).join('')}
+        </div>
+      </div>
+
       <div id="wx-loading" class="hidden py-20 text-center">
         <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p class="font-bold text-primary">Fetching weather intelligence…</p>
+        <p class="font-bold text-primary">Fetching AI weather intelligence…</p>
       </div>
 
       <div id="wx-results">
         <div class="py-12 text-center text-outline">
           <span class="material-symbols-outlined text-5xl mb-3 block">cloudy_snowing</span>
-          <p class="font-bold">Select district and click Get Forecast for AI-powered weather risk analysis</p>
+          <p class="font-bold">Loading AI-powered weather risk analysis with real-time data…</p>
         </div>
       </div>
     </div>
@@ -50,7 +73,73 @@ export function initWeather() {
     heatwave: 'local_fire_department', 'pest-favorable': 'pest_control',
   };
 
-  async function load() {
+  // ─── Live Weather from Serper ──────────────────────────────
+  async function loadLiveWeather(district) {
+    const container = document.getElementById('live-wx-content');
+    container.innerHTML = [1,2,3].map(() => `<div class="p-4 bg-white/10 rounded-xl animate-pulse h-20"></div>`).join('');
+    try {
+      const data = await getSerperWeather({ district });
+      const ab = data.answerBox || {};
+      const snippets = data.weatherSnippets || [];
+      const searchResults = data.searchResults || [];
+
+      const temp = ab.answer || ab.title || '';
+      const conditions = ab.snippet || '';
+      const details = snippets.map(s => s.snippet).join(' ') || searchResults.map(r => r.snippet).filter(Boolean).join(' ');
+
+      container.innerHTML = `
+        <div class="p-4 bg-white/10 rounded-xl">
+          <p class="text-[10px] font-bold text-primary-fixed uppercase tracking-wider mb-2">Current Weather</p>
+          <p class="font-headline text-2xl font-black">${temp || 'Data loading...'}</p>
+          <p class="text-sm text-primary-fixed-dim mt-1">${district}, Maharashtra</p>
+        </div>
+        <div class="col-span-2 p-4 bg-white/10 rounded-xl">
+          <p class="text-[10px] font-bold text-primary-fixed uppercase tracking-wider mb-2">Forecast & Conditions</p>
+          <p class="text-sm leading-relaxed">${conditions || details.slice(0, 300) || 'Fetching weather data...'}</p>
+        </div>
+      `;
+
+      // Show source links
+      if (searchResults.length > 0) {
+        container.innerHTML += `
+          <div class="col-span-3 flex gap-2 flex-wrap mt-1">
+            ${searchResults.slice(0, 3).map(r => `
+              <a href="${r.link}" target="_blank" rel="noopener" class="text-[10px] text-primary-fixed/80 hover:text-white transition-colors underline">${r.title?.slice(0, 40)}…</a>
+            `).join('•')}
+          </div>`;
+      }
+    } catch {
+      container.innerHTML = `<div class="col-span-3 p-4 bg-white/10 rounded-xl"><p class="text-sm">Live weather unavailable. Using AI forecast below.</p></div>`;
+    }
+  }
+
+  // ─── Weather News ──────────────────────────────────────────
+  async function loadWeatherNews(district) {
+    const container = document.getElementById('wx-news-content');
+    container.innerHTML = [1,2,3].map(() => `<div class="p-4 bg-surface-container-low rounded-xl animate-pulse h-24"></div>`).join('');
+    try {
+      const data = await getSerperNews({ district, topic: 'weather monsoon rainfall' });
+      if (data.news?.length) {
+        container.innerHTML = data.news.slice(0, 6).map(n => `
+          <a href="${n.link}" target="_blank" rel="noopener" class="block p-4 bg-surface-container-low rounded-xl hover:bg-surface-container transition-colors group">
+            ${n.imageUrl ? `<img src="${n.imageUrl}" class="w-full h-24 rounded-lg object-cover mb-2" alt="" onerror="this.style.display='none'"/>` : ''}
+            <p class="text-xs font-bold text-primary group-hover:text-secondary transition-colors line-clamp-2">${n.title}</p>
+            <div class="flex items-center gap-2 mt-2">
+              <span class="text-[10px] text-outline">${n.source || ''}</span>
+              <span class="text-[10px] text-outline">•</span>
+              <span class="text-[10px] text-outline">${n.date || ''}</span>
+            </div>
+          </a>`).join('');
+      } else {
+        container.innerHTML = '<p class="text-sm text-outline col-span-3">No weather news available.</p>';
+      }
+    } catch {
+      container.innerHTML = '<p class="text-sm text-error col-span-3">Could not load weather news.</p>';
+    }
+  }
+
+  // ─── K2 AI Weather Risk ────────────────────────────────────
+  async function loadAI() {
     const district = document.getElementById('wx-district')?.value;
     const crop = document.getElementById('wx-crop')?.value;
 
@@ -66,6 +155,15 @@ export function initWeather() {
       const priorityOrder = { immediate: 0, 'this-week': 1, 'this-month': 2 };
 
       document.getElementById('wx-results').innerHTML = `
+        <!-- Current Conditions from AI -->
+        ${data.currentConditions ? `
+        <div class="grid grid-cols-4 gap-4 mb-6">
+          ${data.currentConditions.temperature ? `<div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm text-center"><p class="text-[10px] font-bold text-outline uppercase tracking-wider mb-2">Temperature</p><p class="font-headline text-3xl font-black text-primary">${data.currentConditions.temperature}</p></div>` : ''}
+          ${data.currentConditions.humidity ? `<div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm text-center"><p class="text-[10px] font-bold text-outline uppercase tracking-wider mb-2">Humidity</p><p class="font-headline text-3xl font-black text-secondary">${data.currentConditions.humidity}</p></div>` : ''}
+          ${data.currentConditions.conditions ? `<div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm text-center"><p class="text-[10px] font-bold text-outline uppercase tracking-wider mb-2">Conditions</p><p class="font-headline text-xl font-black text-tertiary">${data.currentConditions.conditions}</p></div>` : ''}
+          ${data.currentConditions.wind ? `<div class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm text-center"><p class="text-[10px] font-bold text-outline uppercase tracking-wider mb-2">Wind</p><p class="font-headline text-xl font-black text-on-surface">${data.currentConditions.wind}</p></div>` : ''}
+        </div>` : ''}
+
         <!-- Impact Score Banner -->
         <div class="grid grid-cols-3 gap-6 mb-8">
           <div class="col-span-1 bg-surface-container-lowest p-6 rounded-2xl shadow-sm text-center">
@@ -131,6 +229,13 @@ export function initWeather() {
     }
   }
 
-  document.getElementById('fetch-weather')?.addEventListener('click', load);
-  load();
+  function loadAll() {
+    const district = document.getElementById('wx-district')?.value;
+    loadLiveWeather(district);
+    loadWeatherNews(district);
+    loadAI();
+  }
+
+  document.getElementById('fetch-weather')?.addEventListener('click', loadAll);
+  loadAll();
 }
