@@ -6,6 +6,7 @@
 const WORKER_URL = 'https://agriintel-worker.vishwajeetadkine705.workers.dev';
 const RESEARCH_ASSISTANT_URL = 'https://researchassistant.vishwajeetadkine705.workers.dev';
 const LAB_WORKER_URL = 'https://lab.vishwajeetadkine705.workers.dev';
+const RECOMMENDATION_WORKER_URL = 'https://recommendation.vishwajeetadkine705.workers.dev';
 
 // ─── Location & Language Store ────────────────────────────────────────────────
 
@@ -108,7 +109,7 @@ export async function getRecommendations({ state, season, soilType, farmSize, ph
     soilData: { pH: ph, nitrogen: n, phosphorus: p, potassium: k },
     rainfall,
     temperature,
-  }));
+  }), RECOMMENDATION_WORKER_URL);
   return res.json();
 }
 
