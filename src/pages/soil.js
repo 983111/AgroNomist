@@ -1,99 +1,193 @@
+import { getSoilIntelligence } from '../services/api.js';
+
 export function renderSoil() {
-  return `<main class="ml-64 mt-16 p-10 fallow-ground min-h-screen page-enter">
-    <section class="mb-12 flex items-end justify-between">
-      <div class="max-w-2xl">
-        <h2 class="font-headline text-5xl font-extrabold tracking-tight text-primary leading-none mb-4">Soil Intelligence <span class="text-secondary">&amp; Analytics</span></h2>
-        <p class="text-on-surface-variant text-lg leading-relaxed font-medium">Integrating hyperspectral soil analysis with predictive yield modeling for the Nashik vineyard corridor.</p>
-      </div>
-      <div class="flex items-center space-x-4 pb-2">
-        <div class="text-right"><p class="font-label text-[10px] uppercase font-bold tracking-[0.2em] text-outline">Last Sensor Sync</p><p class="font-headline font-bold text-primary">04:12 PM IST</p></div>
-        <div class="w-12 h-12 rounded-full border-2 border-primary-fixed flex items-center justify-center"><span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">sync</span></div>
-      </div>
-    </section>
-    <div class="grid grid-cols-12 gap-8">
-      <!-- Macronutrient Profile -->
-      <div class="col-span-12 lg:col-span-7 bg-surface-container-lowest p-8 rounded-[2rem] shadow-[0px_12px_32px_rgba(25,28,27,0.04)] relative overflow-hidden group">
-        <div class="relative z-10">
-          <div class="flex justify-between items-start mb-10">
-            <div><h3 class="font-headline text-2xl font-bold text-primary">Macronutrient Profile</h3><p class="font-label text-xs uppercase tracking-widest text-outline font-bold mt-1">Chemical Composition Analysis</p></div>
-            <div class="bg-primary-fixed px-4 py-2 rounded-xl"><span class="font-headline font-bold text-primary">Optimal pH: 6.8</span></div>
-          </div>
-          <div class="grid grid-cols-3 gap-12">
-            <div class="space-y-4"><div class="flex items-center justify-between"><span class="font-headline font-black text-3xl text-primary">N</span><span class="text-xs font-bold text-on-surface-variant">42 mg/kg</span></div><div class="h-24 w-full bg-surface-container rounded-lg flex items-end overflow-hidden"><div class="w-full bg-primary h-[65%]"></div></div><p class="font-label text-[10px] uppercase font-bold tracking-widest text-primary">Nitrogen (Normal)</p></div>
-            <div class="space-y-4"><div class="flex items-center justify-between"><span class="font-headline font-black text-3xl text-primary">P</span><span class="text-xs font-bold text-on-surface-variant">18 mg/kg</span></div><div class="h-24 w-full bg-surface-container rounded-lg flex items-end overflow-hidden"><div class="w-full bg-secondary h-[35%]"></div></div><p class="font-label text-[10px] uppercase font-bold tracking-widest text-secondary">Phosphorus (Low)</p></div>
-            <div class="space-y-4"><div class="flex items-center justify-between"><span class="font-headline font-black text-3xl text-primary">K</span><span class="text-xs font-bold text-on-surface-variant">245 mg/kg</span></div><div class="h-24 w-full bg-surface-container rounded-lg flex items-end overflow-hidden"><div class="w-full bg-primary h-[85%]"></div></div><p class="font-label text-[10px] uppercase font-bold tracking-widest text-primary">Potassium (High)</p></div>
-          </div>
-          <div class="mt-12 p-6 bg-surface-container-low rounded-2xl border-l-4 border-secondary flex items-center space-x-6">
-            <div class="w-12 h-12 bg-secondary-container/20 rounded-full flex items-center justify-center"><span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">lightbulb</span></div>
-            <div><p class="text-sm font-semibold text-primary">AI Insight: Potassium saturation is above target.</p><p class="text-xs text-on-surface-variant mt-1">Reduce K-rich fertilization for the next 14-day cycle to maintain moisture retention.</p></div>
-          </div>
-        </div>
-        <div class="absolute top-0 right-0 w-64 h-64 bg-primary-fixed/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
-      </div>
-      <!-- Crop Recommendation -->
-      <div class="col-span-12 lg:col-span-5 flex flex-col space-y-8">
-        <div class="bg-primary p-8 rounded-[2rem] text-on-primary flex flex-col h-full relative overflow-hidden">
-          <div class="relative z-10 h-full flex flex-col">
-            <div class="mb-8"><div class="bg-on-primary/10 w-fit px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-widest mb-4">India Context - Kharif 2024</div><h3 class="font-headline text-2xl font-bold">Crop Recommendation</h3></div>
-            <div class="space-y-6 flex-1">
-              <div class="flex items-center justify-between p-4 bg-on-primary/5 rounded-2xl hover:bg-on-primary/10 transition-colors">
-                <div class="flex items-center space-x-4"><div class="w-12 h-12 bg-on-primary/10 rounded-full flex items-center justify-center"><span class="material-symbols-outlined">eco</span></div><div><p class="font-headline font-bold">Table Grapes (Thomson Seedless)</p><p class="text-xs text-on-primary/60">Match Probability: 98%</p></div></div>
-                <span class="material-symbols-outlined text-primary-fixed">verified</span>
-              </div>
-              <div class="flex items-center justify-between p-4 bg-on-primary/5 rounded-2xl hover:bg-on-primary/10 transition-colors">
-                <div class="flex items-center space-x-4"><div class="w-12 h-12 bg-on-primary/10 rounded-full flex items-center justify-center"><span class="material-symbols-outlined">compost</span></div><div><p class="font-headline font-bold">Pomegranate (Bhagawa)</p><p class="text-xs text-on-primary/60">Match Probability: 84%</p></div></div>
-                <span class="material-symbols-outlined opacity-50">arrow_forward_ios</span>
-              </div>
-            </div>
-            <button class="mt-8 py-4 bg-on-primary text-primary rounded-xl font-headline font-bold text-sm uppercase tracking-widest hover:bg-primary-fixed transition-colors">Generate Full Report</button>
-          </div>
-          <div class="absolute bottom-0 right-0 w-48 h-48 translate-x-12 translate-y-12 opacity-20"><span class="material-symbols-outlined text-[160px]" style="font-variation-settings: 'FILL' 1;">model_training</span></div>
+  return `<main class="ml-64 pt-16 min-h-screen page-enter">
+    <div class="p-8 max-w-7xl mx-auto">
+      <div class="flex justify-between items-end mb-8">
+        <div>
+          <span class="text-[10px] tracking-[0.2em] uppercase font-bold text-secondary">Crop & Soil Intelligence</span>
+          <h2 class="font-headline text-4xl font-extrabold text-primary tracking-tight mt-1">Soil Analyzer</h2>
         </div>
       </div>
-      <!-- Fertilizer Planner -->
-      <div class="col-span-12 lg:col-span-8 bg-surface-container-lowest p-8 rounded-[2rem] shadow-[0px_12px_32px_rgba(25,28,27,0.04)]">
-        <div class="flex justify-between items-center mb-8">
-          <div><h3 class="font-headline text-2xl font-bold text-primary">Fertilizer Planner</h3><p class="font-label text-xs uppercase tracking-widest text-outline font-bold">Interactive Cost vs. Yield Optimizer</p></div>
-          <div class="flex space-x-2"><div class="px-4 py-2 bg-surface-container-low rounded-lg text-xs font-bold text-primary">Current View: Quarterly</div><div class="px-4 py-2 bg-primary-container text-on-primary-container rounded-lg text-xs font-bold">Optimize Now</div></div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          <div class="space-y-8">
-            <div><div class="flex justify-between mb-2"><label class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Fertilizer Intensity (N-P-K)</label><span class="text-xs font-bold text-primary">High (85%)</span></div><div class="h-2 bg-surface-container rounded-full relative"><div class="absolute top-0 left-0 h-full w-[85%] bg-gradient-to-r from-[#472d25] to-[#123b2a] rounded-full"></div><div class="absolute top-1/2 left-[85%] -translate-y-1/2 w-4 h-4 bg-surface-container-lowest border-2 border-primary rounded-full shadow-md"></div></div></div>
-            <div class="grid grid-cols-2 gap-6">
-              <div class="p-6 bg-surface-container-low rounded-2xl text-center"><p class="text-xs font-bold text-outline uppercase tracking-tighter mb-1">Projected Cost</p><p class="text-2xl font-headline font-black text-primary">₹24,500<span class="text-sm font-medium">/acre</span></p></div>
-              <div class="p-6 bg-secondary-fixed/30 rounded-2xl text-center border-2 border-secondary/20"><p class="text-xs font-bold text-secondary uppercase tracking-tighter mb-1">Estimated Yield</p><p class="text-2xl font-headline font-black text-secondary">+18.4%</p></div>
-            </div>
+
+      <!-- Input Form -->
+      <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm mb-8">
+        <h3 class="font-headline text-base font-bold text-primary mb-4">Enter Farm Details</h3>
+        <div class="grid grid-cols-4 gap-4 mb-4">
+          <div>
+            <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">District</label>
+            <select id="soil-district" class="w-full bg-surface-container-low border-none rounded-xl text-sm py-2.5 px-3 focus:ring-2 focus:ring-primary/20">
+              <option>Nanded</option><option>Nashik</option><option>Pune</option><option>Latur</option>
+              <option>Aurangabad</option><option>Amravati</option><option>Akola</option>
+            </select>
           </div>
-          <div class="h-64 flex items-end justify-between space-x-2 px-4">
-            <div class="w-8 bg-surface-container-high rounded-t-lg h-[40%]"></div>
-            <div class="w-8 bg-surface-container-high rounded-t-lg h-[55%]"></div>
-            <div class="w-8 bg-surface-container-high rounded-t-lg h-[45%]"></div>
-            <div class="w-8 bg-primary rounded-t-lg h-[80%] relative"><div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-primary text-on-primary text-[10px] py-1 px-2 rounded whitespace-nowrap">Optimal Peak</div></div>
-            <div class="w-8 bg-surface-container-high rounded-t-lg h-[60%]"></div>
-            <div class="w-8 bg-surface-container-high rounded-t-lg h-[35%]"></div>
-            <div class="w-8 bg-surface-container-high rounded-t-lg h-[50%]"></div>
+          <div>
+            <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Target Crop</label>
+            <select id="soil-crop" class="w-full bg-surface-container-low border-none rounded-xl text-sm py-2.5 px-3 focus:ring-2 focus:ring-primary/20">
+              <option value="">Auto recommend</option>
+              <option>Soybean</option><option>Cotton</option><option>Wheat</option><option>Rice</option>
+              <option>Tur Dal</option><option>Onion</option><option>Pomegranate</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">Season</label>
+            <select id="soil-season" class="w-full bg-surface-container-low border-none rounded-xl text-sm py-2.5 px-3 focus:ring-2 focus:ring-primary/20">
+              <option>Kharif</option><option>Rabi</option><option>Zaid</option>
+            </select>
+          </div>
+          <div class="flex items-end">
+            <button id="analyze-soil" class="w-full py-2.5 bg-primary text-white rounded-xl font-bold text-sm hover:opacity-90 flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-sm">science</span> Analyze Soil
+            </button>
           </div>
         </div>
+        <!-- Optional sensor data -->
+        <details class="group">
+          <summary class="text-xs font-bold text-secondary cursor-pointer flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm group-open:rotate-90 transition-transform">chevron_right</span>
+            Add Manual / Sensor Soil Data (optional)
+          </summary>
+          <div class="mt-3 grid grid-cols-4 gap-3">
+            ${[
+              ['pH', 'soil-ph', '6.5'],
+              ['Nitrogen (mg/kg)', 'soil-n', ''],
+              ['Phosphorus (mg/kg)', 'soil-p', ''],
+              ['Potassium (mg/kg)', 'soil-k', ''],
+            ].map(([label, id, placeholder]) => `
+              <div>
+                <label class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block mb-1">${label}</label>
+                <input id="${id}" type="number" placeholder="${placeholder}" class="w-full bg-surface-container-low border-none rounded-xl text-sm py-2.5 px-3 focus:ring-2 focus:ring-primary/20"/>
+              </div>`).join('')}
+          </div>
+        </details>
       </div>
-      <!-- Optimization Heatmap -->
-      <div class="col-span-12 lg:col-span-4 bg-surface-container-lowest p-8 rounded-[2rem] shadow-[0px_12px_32px_rgba(25,28,27,0.04)] overflow-hidden flex flex-col">
-        <div class="mb-6"><h3 class="font-headline text-xl font-bold text-primary">Optimization Heatmap</h3><p class="font-label text-xs uppercase tracking-widest text-outline font-bold">Nashik District Corridor</p></div>
-        <div class="flex-1 relative rounded-2xl overflow-hidden bg-surface-container group min-h-[250px]">
-          <img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-[2000ms]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-nV1Q71V_j4jD37bMITuxyn7BKeu-VCuQvph9Z5vLusTclMwhg5iWYzdO3auVg0hAoNvgqKrF8-02BT5xRy4jf8XBFiVmumuADWPJoYkGexqJBmg7SgzIadJhbgpUt0tdbeWnX6xY26duZVjnmy4If_9lQtXyxOANDRio6MBYheqjpEmykwMLdhtq6NYcgPHiYFr3ClO3X5E3TrHce3glTr8AK-ys7CjuVU8FWgWmDRzx9UH4Wc2Pu_SwWOrguJV4ODxBAVHg92w"/>
-          <div class="absolute top-1/4 left-1/3 w-32 h-32 bg-primary/40 rounded-full blur-2xl"></div>
-          <div class="absolute bottom-1/3 right-1/4 w-24 h-24 bg-secondary/30 rounded-full blur-xl"></div>
-          <div class="absolute top-4 right-4 bg-surface-container-lowest/80 backdrop-blur px-3 py-1.5 rounded-lg border border-outline-variant/20 shadow-sm"><div class="flex items-center space-x-2"><div class="w-2 h-2 rounded-full bg-primary"></div><span class="text-[10px] font-bold text-primary uppercase">High Fertility</span></div></div>
-          <div class="absolute bottom-4 left-4 right-4 bg-surface-container-lowest/90 backdrop-blur p-4 rounded-xl shadow-lg border border-outline-variant/10"><div class="flex justify-between items-center"><div><p class="text-[10px] font-bold text-outline uppercase tracking-wider">Active Sector</p><p class="text-sm font-headline font-bold text-primary">Niphad Subdivision</p></div><span class="material-symbols-outlined text-primary">info</span></div></div>
+
+      <!-- Loading -->
+      <div id="soil-loading" class="hidden py-20 text-center">
+        <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p class="font-bold text-primary">Analyzing soil intelligence…</p>
+      </div>
+
+      <!-- Results -->
+      <div id="soil-results">
+        <div class="py-12 text-center text-outline">
+          <span class="material-symbols-outlined text-5xl mb-3 block">layers</span>
+          <p class="font-bold">Enter your farm details and click Analyze Soil</p>
         </div>
-      </div>
-      <!-- Sensor Metadata -->
-      <div class="col-span-12 mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="p-6 border border-outline-variant/10 rounded-2xl flex items-center space-x-4"><span class="material-symbols-outlined text-outline">thermostat</span><div><p class="text-[10px] font-bold text-outline uppercase">Soil Temp</p><p class="text-lg font-headline font-bold text-primary">24.2° C</p></div></div>
-        <div class="p-6 border border-outline-variant/10 rounded-2xl flex items-center space-x-4"><span class="material-symbols-outlined text-outline">opacity</span><div><p class="text-[10px] font-bold text-outline uppercase">Moisture</p><p class="text-lg font-headline font-bold text-primary">12.5% VWC</p></div></div>
-        <div class="p-6 border border-outline-variant/10 rounded-2xl flex items-center space-x-4"><span class="material-symbols-outlined text-outline">bolt</span><div><p class="text-[10px] font-bold text-outline uppercase">EC Content</p><p class="text-lg font-headline font-bold text-primary">0.82 dS/m</p></div></div>
-        <div class="p-6 border border-outline-variant/10 rounded-2xl flex items-center space-x-4"><span class="material-symbols-outlined text-outline">grain</span><div><p class="text-[10px] font-bold text-outline uppercase">Texture</p><p class="text-lg font-headline font-bold text-primary">Silty Loam</p></div></div>
       </div>
     </div>
-  </main>
-  <div class="fixed bottom-10 right-10 z-50"><button class="bg-primary text-on-primary w-16 h-16 rounded-full shadow-2xl flex items-center justify-center group hover:scale-110 transition-transform active:scale-95"><span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">add_chart</span><div class="absolute right-20 bg-primary text-on-primary px-4 py-2 rounded-xl font-headline font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg">Run Soil Simulation</div></button></div>`;
+  </main>`;
+}
+
+export function initSoil() {
+  document.getElementById('analyze-soil')?.addEventListener('click', async () => {
+    const district = document.getElementById('soil-district')?.value;
+    const crop = document.getElementById('soil-crop')?.value;
+    const season = document.getElementById('soil-season')?.value;
+    const ph = document.getElementById('soil-ph')?.value;
+    const n = document.getElementById('soil-n')?.value;
+    const p = document.getElementById('soil-p')?.value;
+    const k = document.getElementById('soil-k')?.value;
+    const soilData = (ph || n || p || k) ? { pH: ph, nitrogen: n, phosphorus: p, potassium: k } : undefined;
+
+    document.getElementById('soil-loading').classList.remove('hidden');
+    document.getElementById('soil-results').innerHTML = '';
+
+    try {
+      const data = await getSoilIntelligence({ district, soilData, crop, season });
+      document.getElementById('soil-loading').classList.add('hidden');
+      const sp = data.soilProfile || {};
+      const fp = data.fertilizerPlan || {};
+
+      document.getElementById('soil-results').innerHTML = `
+        <div class="grid grid-cols-12 gap-6">
+          <!-- Soil Profile -->
+          <div class="col-span-5 bg-surface-container-lowest p-6 rounded-2xl shadow-sm">
+            <h3 class="font-headline text-lg font-bold text-primary mb-4">Soil Profile</h3>
+            <div class="space-y-3 mb-4">
+              ${[
+                ['Soil Type', sp.type],
+                ['pH Range', sp.ph],
+                ['Organic Carbon', sp.organicCarbon],
+              ].map(([l, v]) => `
+                <div class="flex justify-between items-center py-2 border-b border-outline-variant/10">
+                  <span class="text-sm text-outline">${l}</span>
+                  <span class="text-sm font-bold text-on-surface">${v || '—'}</span>
+                </div>`).join('')}
+            </div>
+            ${sp.majorDeficiencies?.length ? `
+              <div class="mb-4">
+                <p class="text-[10px] font-bold text-error uppercase tracking-wider mb-2">Major Deficiencies</p>
+                <div class="flex flex-wrap gap-2">
+                  ${sp.majorDeficiencies.map(d => `<span class="px-2 py-1 bg-error/10 text-error text-xs font-bold rounded-lg">${d}</span>`).join('')}
+                </div>
+              </div>` : ''}
+            ${sp.suitableCrops?.length ? `
+              <div>
+                <p class="text-[10px] font-bold text-primary uppercase tracking-wider mb-2">Suitable Crops</p>
+                <div class="flex flex-wrap gap-2">
+                  ${sp.suitableCrops.map(c => `<span class="px-2 py-1 bg-primary-fixed/30 text-primary text-xs font-bold rounded-lg">${c}</span>`).join('')}
+                </div>
+              </div>` : ''}
+            ${data.districtInsights ? `
+              <div class="mt-4 p-3 bg-surface-container-low rounded-xl">
+                <p class="text-xs text-on-surface-variant leading-relaxed">${data.districtInsights}</p>
+              </div>` : ''}
+          </div>
+
+          <!-- Fertilizer Plan -->
+          <div class="col-span-7 bg-surface-container-lowest p-6 rounded-2xl shadow-sm">
+            <h3 class="font-headline text-lg font-bold text-primary mb-4">Fertilizer Plan</h3>
+            ${fp.basalDose?.length ? `
+              <div class="mb-4">
+                <p class="text-[10px] font-bold text-outline uppercase tracking-wider mb-2">Basal Dose (At Sowing)</p>
+                <div class="space-y-2">
+                  ${fp.basalDose.map(f => `
+                    <div class="flex items-center gap-3 p-3 bg-primary-fixed/10 rounded-xl text-sm">
+                      <span class="material-symbols-outlined text-primary text-base">compost</span>
+                      <span class="font-medium flex-1">${f.fertilizer}</span>
+                      <span class="font-bold text-primary">${f.quantity}</span>
+                    </div>`).join('')}
+                </div>
+              </div>` : ''}
+            ${fp.topDress?.length ? `
+              <div class="mb-4">
+                <p class="text-[10px] font-bold text-outline uppercase tracking-wider mb-2">Top Dressing</p>
+                <div class="space-y-2">
+                  ${fp.topDress.map(f => `
+                    <div class="flex items-center gap-3 p-3 bg-secondary-fixed/20 rounded-xl text-sm">
+                      <span class="material-symbols-outlined text-secondary text-base">eco</span>
+                      <span class="font-medium flex-1">${f.fertilizer}</span>
+                      <span class="font-bold text-secondary">${f.quantity}</span>
+                      <span class="text-xs text-outline">${f.timing}</span>
+                    </div>`).join('')}
+                </div>
+              </div>` : ''}
+            ${data.organicAlternatives ? `
+              <div class="p-3 bg-tertiary-fixed/30 rounded-xl">
+                <p class="text-[10px] font-bold text-tertiary uppercase tracking-wider mb-1">Organic Alternative</p>
+                <p class="text-xs text-on-surface-variant">${data.organicAlternatives}</p>
+              </div>` : ''}
+          </div>
+
+          <!-- Seasonal Calendar -->
+          ${data.seasonalCalendar?.length ? `
+          <div class="col-span-12 bg-surface-container-lowest p-6 rounded-2xl shadow-sm">
+            <h3 class="font-headline text-lg font-bold text-primary mb-4">Seasonal Activity Calendar</h3>
+            <div class="grid grid-cols-4 gap-3">
+              ${data.seasonalCalendar.map((item, i) => `
+                <div class="p-4 bg-surface-container-low rounded-xl border-t-4 border-primary" style="border-top-color: hsl(${(i * 40) % 360}, 50%, 35%)">
+                  <p class="text-xs font-bold text-primary uppercase tracking-wider mb-1">${item.month}</p>
+                  <p class="text-sm font-medium text-on-surface mb-1">${item.activity}</p>
+                  <p class="text-xs text-outline">${item.inputs || ''}</p>
+                </div>`).join('')}
+            </div>
+          </div>` : ''}
+        </div>
+      `;
+    } catch (e) {
+      document.getElementById('soil-loading').classList.add('hidden');
+      document.getElementById('soil-results').innerHTML = `<div class="py-12 text-center"><p class="text-error font-bold">Error: ${e.message}</p></div>`;
+    }
+  });
 }
