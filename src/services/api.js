@@ -13,7 +13,8 @@ async function post(path, body) {
   return res;
 }
 
-// Streaming chat — returns the EventSource-like readable stream
+// ─── K2 AI Endpoints ──────────────────────────────────────────────────────────
+
 export async function streamChat(message, context = '', language = 'en', mode = 'default') {
   const res = await post('/api/chat', { message, context, language, mode });
   return res.body;
@@ -56,5 +57,27 @@ export async function getMarketplace({ query, category, district, budget }) {
 
 export async function submitFeedback({ suggestionType, originalSuggestion, actualOutcome, crop, district }) {
   const res = await post('/api/feedback', { suggestionType, originalSuggestion, actualOutcome, crop, district });
+  return res.json();
+}
+
+// ─── Serper Real-Time Endpoints ───────────────────────────────────────────────
+
+export async function getSerperWeather({ district, state = 'Maharashtra' }) {
+  const res = await post('/api/serper/weather', { district, state });
+  return res.json();
+}
+
+export async function getSerperMarket({ crop, district, state = 'Maharashtra' }) {
+  const res = await post('/api/serper/market', { crop, district, state });
+  return res.json();
+}
+
+export async function getSerperNews({ district, state = 'Maharashtra', crop, topic }) {
+  const res = await post('/api/serper/news', { district, state, crop, topic });
+  return res.json();
+}
+
+export async function getSerperPlaces({ query, district, state = 'Maharashtra', category }) {
+  const res = await post('/api/serper/places', { query, district, state, category });
   return res.json();
 }
