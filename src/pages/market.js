@@ -1,4 +1,4 @@
-import { getMarketData } from '../services/api.js';
+import { getMarketData, getSerperMarket, getSerperNews } from '../services/api.js';
 
 export function renderMarket() {
   return `<main class="ml-64 pt-16 min-h-screen page-enter">
@@ -35,17 +35,41 @@ export function renderMarket() {
         </div>
       </div>
 
+      <!-- Live Prices from Google -->
+      <div class="mb-8 bg-gradient-to-r from-secondary/10 to-primary/5 rounded-2xl p-6 border border-secondary/20">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="material-symbols-outlined text-secondary text-sm">travel_explore</span>
+          <h3 class="font-headline text-lg font-bold text-primary">Live Market Data</h3>
+          <span class="px-2 py-0.5 bg-secondary/10 text-secondary text-[10px] font-bold rounded-full">GOOGLE SEARCH</span>
+          <span class="ml-auto px-2 py-0.5 bg-secondary/20 rounded-full text-[10px] font-bold text-secondary animate-pulse">● LIVE</span>
+        </div>
+        <div id="serper-price-results" class="space-y-3">
+          ${[1,2,3].map(() => `<div class="p-4 bg-white/60 rounded-xl animate-pulse h-16"></div>`).join('')}
+        </div>
+      </div>
+
+      <!-- Market News -->
+      <div class="mb-8 bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10">
+        <div class="flex items-center gap-2 mb-4">
+          <h3 class="font-headline text-lg font-bold text-primary">Commodity Market News</h3>
+          <span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full">GOOGLE NEWS</span>
+        </div>
+        <div id="market-news-feed" class="grid grid-cols-3 gap-4">
+          ${[1,2,3].map(() => `<div class="p-4 bg-surface-container-low rounded-xl animate-pulse h-28"></div>`).join('')}
+        </div>
+      </div>
+
       <!-- Loading -->
       <div id="market-loading" class="hidden py-20 text-center">
         <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p class="font-bold text-primary">Fetching market intelligence…</p>
+        <p class="font-bold text-primary">Fetching AI market intelligence with real-time data…</p>
       </div>
 
-      <!-- Results -->
+      <!-- AI Results -->
       <div id="market-results" class="space-y-8">
-        <div class="py-16 text-center text-outline">
+        <div class="py-8 text-center text-outline">
           <span class="material-symbols-outlined text-5xl mb-3 block">bar_chart</span>
-          <p class="font-bold">Select a crop and click Analyze to get live market data</p>
+          <p class="font-bold">Loading AI analysis enriched with live market data…</p>
         </div>
       </div>
     </div>
@@ -56,7 +80,70 @@ export function initMarket() {
   const trendIcon = { up: '↑', down: '↓', stable: '→' };
   const trendColor = { up: 'text-primary', down: 'text-error', stable: 'text-secondary' };
 
-  async function load() {
+  // ─── Live Prices from Serper ───────────────────────────────
+  async function loadSerperPrices(crop, district) {
+    const container = document.getElementById('serper-price-results');
+    container.innerHTML = [1,2,3].map(() => `<div class="p-4 bg-white/60 rounded-xl animate-pulse h-16"></div>`).join('');
+    try {
+      const data = await getSerperMarket({ crop, district });
+      let html = '';
+
+      if (data.priceAnswerBox) {
+        const pab = data.priceAnswerBox;
+        html += `
+          <div class="p-4 bg-white rounded-xl border-l-4 border-secondary shadow-sm">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="material-symbols-outlined text-secondary text-sm">verified</span>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-secondary">Google Price Data</span>
+            </div>
+            <p class="text-base font-bold text-on-surface">${pab.answer || pab.snippet || pab.title || ''}</p>
+          </div>`;
+      }
+
+      if (data.priceResults?.length) {
+        html += `<div class="grid grid-cols-2 gap-3">`;
+        html += data.priceResults.slice(0, 6).map(r => `
+          <a href="${r.link}" target="_blank" rel="noopener" class="block p-3 bg-white rounded-xl hover:shadow-md transition-shadow group border border-outline-variant/10">
+            <p class="text-sm font-bold text-primary group-hover:text-secondary transition-colors line-clamp-1">${r.title}</p>
+            <p class="text-xs text-on-surface-variant mt-1 line-clamp-2">${r.snippet || ''}</p>
+            ${r.date ? `<p class="text-[10px] text-outline mt-1">${r.date}</p>` : ''}
+          </a>`).join('');
+        html += `</div>`;
+      }
+
+      container.innerHTML = html || '<p class="text-sm text-outline p-4">No live price data found for this crop.</p>';
+    } catch {
+      container.innerHTML = '<p class="text-sm text-error p-4">Could not fetch live prices.</p>';
+    }
+  }
+
+  // ─── Market News from Serper ───────────────────────────────
+  async function loadMarketNews(crop, district) {
+    const container = document.getElementById('market-news-feed');
+    container.innerHTML = [1,2,3].map(() => `<div class="p-4 bg-surface-container-low rounded-xl animate-pulse h-28"></div>`).join('');
+    try {
+      const data = await getSerperNews({ district, crop, topic: 'market price mandi' });
+      if (data.news?.length) {
+        container.innerHTML = data.news.slice(0, 6).map(n => `
+          <a href="${n.link}" target="_blank" rel="noopener" class="block p-4 bg-surface-container-low rounded-xl hover:bg-surface-container transition-colors group">
+            ${n.imageUrl ? `<img src="${n.imageUrl}" class="w-full h-24 rounded-lg object-cover mb-2" alt="" onerror="this.style.display='none'"/>` : ''}
+            <p class="text-xs font-bold text-primary group-hover:text-secondary transition-colors line-clamp-2">${n.title}</p>
+            <div class="flex items-center gap-2 mt-2">
+              <span class="text-[10px] text-outline">${n.source || ''}</span>
+              <span class="text-[10px] text-outline">•</span>
+              <span class="text-[10px] text-outline">${n.date || ''}</span>
+            </div>
+          </a>`).join('');
+      } else {
+        container.innerHTML = '<p class="text-sm text-outline col-span-3">No market news available.</p>';
+      }
+    } catch {
+      container.innerHTML = '<p class="text-sm text-error col-span-3">Could not load market news.</p>';
+    }
+  }
+
+  // ─── K2 AI Analysis ────────────────────────────────────────
+  async function loadAI() {
     const crop = document.getElementById('market-crop')?.value;
     const district = document.getElementById('market-district')?.value;
     const acres = document.getElementById('market-acres')?.value;
@@ -177,7 +264,14 @@ export function initMarket() {
     }
   }
 
-  document.getElementById('fetch-market')?.addEventListener('click', load);
-  // Auto-load on page open
-  load();
+  function loadAll() {
+    const crop = document.getElementById('market-crop')?.value;
+    const district = document.getElementById('market-district')?.value;
+    loadSerperPrices(crop, district);
+    loadMarketNews(crop, district);
+    loadAI();
+  }
+
+  document.getElementById('fetch-market')?.addEventListener('click', loadAll);
+  loadAll();
 }
