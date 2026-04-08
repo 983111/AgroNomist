@@ -2,39 +2,39 @@ import './style.css';
 import { Router } from './router.js';
 import { renderSidebar } from './components/sidebar.js';
 import { renderTopbar } from './components/topbar.js';
-import { renderDashboard } from './pages/dashboard.js';
-import { renderResearch } from './pages/research.js';
-import { renderLab } from './pages/lab.js';
-import { renderSoil } from './pages/soil.js';
-import { renderDisease } from './pages/disease.js';
-import { renderWeather } from './pages/weather.js';
-import { renderMarket } from './pages/market.js';
-import { renderNetwork } from './pages/network.js';
-import { renderShop } from './pages/shop.js';
-import { renderFeedback } from './pages/feedback.js';
+import { renderDashboard, initDashboard } from './pages/dashboard.js';
+import { renderResearch, initResearch } from './pages/research.js';
+import { renderLab, initLab } from './pages/lab.js';
+import { renderSoil, initSoil } from './pages/soil.js';
+import { renderDisease, initDisease } from './pages/disease.js';
+import { renderWeather, initWeather } from './pages/weather.js';
+import { renderMarket, initMarket } from './pages/market.js';
+import { renderNetwork, initNetwork } from './pages/network.js';
+import { renderShop, initShop } from './pages/shop.js';
+import { renderFeedback, initFeedback } from './pages/feedback.js';
 
 const routes = [
-  { path: '/', render: renderDashboard },
-  { path: '/research', render: renderResearch },
-  { path: '/lab', render: renderLab },
-  { path: '/soil', render: renderSoil },
-  { path: '/disease', render: renderDisease },
-  { path: '/weather', render: renderWeather },
-  { path: '/market', render: renderMarket },
-  { path: '/network', render: renderNetwork },
-  { path: '/shop', render: renderShop },
-  { path: '/feedback', render: renderFeedback },
+  { path: '/',         render: renderDashboard, init: initDashboard },
+  { path: '/research', render: renderResearch,  init: initResearch  },
+  { path: '/lab',      render: renderLab,       init: initLab       },
+  { path: '/soil',     render: renderSoil,      init: initSoil      },
+  { path: '/disease',  render: renderDisease,   init: initDisease   },
+  { path: '/weather',  render: renderWeather,   init: initWeather   },
+  { path: '/market',   render: renderMarket,    init: initMarket    },
+  { path: '/network',  render: renderNetwork,   init: initNetwork   },
+  { path: '/shop',     render: renderShop,      init: initShop      },
+  { path: '/feedback', render: renderFeedback,  init: initFeedback  },
 ];
 
 const app = document.getElementById('app');
 
-function renderApp(route) {
-  const pageContent = route.render();
-  app.innerHTML = renderSidebar(route.path) + renderTopbar() + pageContent;
-}
-
 window.addEventListener('route-change', (e) => {
-  renderApp(e.detail);
+  const route = e.detail;
+  app.innerHTML = renderSidebar(route.path) + renderTopbar() + route.render();
+  // Init page interactivity after DOM is ready
+  if (route.init) {
+    requestAnimationFrame(() => route.init());
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
