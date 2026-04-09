@@ -1,39 +1,92 @@
 /**
- * AgriIntel K2 — Supabase Authentication
- * Handles: sign up, sign in, session management, onboarding
+ * AgriIntel K2 — Local Authentication
+ * Handles: sign up, sign in, session management, onboarding (localStorage only)
  */
 
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
-// ─── Supabase Config ──────────────────────────────────────────────────────────
-// Replace with your actual Supabase project URL and anon key
-const SUPABASE_URL    = 'https://eyobgsqzvnfrftvrqaeh.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5b2Jnc3F6dm5mcmZ0dnJxYWVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2OTg4ODcsImV4cCI6MjA5MTI3NDg4N30.RrSp_hsrUocpC11Y0eWSkBCF1-kCC6hMKWIImKajJI8';
-
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// ─── Auth State ───────────────────────────────────────────────────────────────
+const STORAGE_KEYS = {
+  USERS: 'agriintel_users_v1',
+  SESSION: 'agriintel_session_v1',
+  PREFS: 'agriintel_prefs',
+};
 
 let currentUser = null;
 
+function makeId() {
+  return `user_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function readJSON(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJSON(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function getUsers() {
+  return readJSON(STORAGE_KEYS.USERS, []);
+}
+
+function saveUsers(users) {
+  writeJSON(STORAGE_KEYS.USERS, users);
+}
+
+function getSessionData() {
+  return readJSON(STORAGE_KEYS.SESSION, null);
+}
+
+function setSessionData(session) {
+  writeJSON(STORAGE_KEYS.SESSION, session);
+}
+
+function clearSessionData() {
+  localStorage.removeItem(STORAGE_KEYS.SESSION);
+}
+
+function sanitizeUser(user) {
+  if (!user) return null;
+  return {
+    id: user.id,
+    email: user.email,
+    created_at: user.created_at,
+  };
+}
+
+function loadProfilePrefs(profile) {
+  const prefs = {
+    city: profile.city || profile.district || '',
+    district: profile.district || profile.city || '',
+    state: profile.state || '',
+    country: profile.country || '',
+    language: profile.language || 'en',
+    crop: profile.primary_crop || '',
+    farmSize: profile.farm_size_acres || 5,
+    fullName: profile.full_name || '',
+  };
+  localStorage.setItem(STORAGE_KEYS.PREFS, JSON.stringify(prefs));
+}
+
 export async function getUser() {
-  const { data: { user } } = await supabase.auth.getUser();
-  currentUser = user;
-  return user;
+  const session = getSessionData();
+  if (!session?.user) return null;
+  currentUser = session.user;
+  return currentUser;
 }
 
 export async function getSession() {
-  const { data: { session } } = await supabase.auth.getSession();
-  return session;
+  return getSessionData();
 }
 
 export async function signOut() {
-  await supabase.auth.signOut();
+  clearSessionData();
   currentUser = null;
   window.location.href = '/auth.html';
 }
-
-// ─── Render Auth Page ─────────────────────────────────────────────────────────
 
 export function renderAuth() {
   return `
@@ -64,13 +117,11 @@ export function renderAuth() {
   `;
 }
 
-// ─── Auth UI ──────────────────────────────────────────────────────────────────
-
 function getAuthHTML(mode = 'signin') {
-  const isSignIn   = mode === 'signin';
-  const isSignUp   = mode === 'signup';
-  const isOnboard  = mode === 'onboard';
-  const isForgot   = mode === 'forgot';
+  const isSignIn = mode === 'signin';
+  const isSignUp = mode === 'signup';
+  const isOnboard = mode === 'onboard';
+  const isForgot = mode === 'forgot';
 
   if (isOnboard) {
     return `
@@ -174,7 +225,7 @@ function getAuthHTML(mode = 'signin') {
         <span class="material-symbols-outlined text-base">arrow_back</span> Back to Sign In
       </button>
       <h1 class="font-headline text-2xl font-black text-[#123b2a] mb-2">Reset Password</h1>
-      <p class="text-sm text-gray-500 mb-6">Enter your email and we'll send a reset link.</p>
+      <p class="text-sm text-gray-500 mb-6">Local mode: password reset by email is unavailable.</p>
       <form id="forgot-form" class="space-y-4">
         <div>
           <label class="text-xs font-bold uppercase tracking-wider text-gray-500 block mb-1">Email Address</label>
@@ -185,7 +236,7 @@ function getAuthHTML(mode = 'signin') {
         <div id="forgot-success" class="hidden p-3 bg-green-50 rounded-xl text-sm text-green-700 font-medium"></div>
         <button type="submit" id="forgot-btn"
           class="w-full py-4 bg-[#123b2a] text-white rounded-xl font-headline font-bold hover:opacity-90 transition-opacity">
-          Send Reset Link
+          Show Recovery Help
         </button>
       </form>
     </div>`;
@@ -193,7 +244,6 @@ function getAuthHTML(mode = 'signin') {
 
   return `
   <div class="bg-white rounded-3xl shadow-xl overflow-hidden fade-in">
-    <!-- Header -->
     <div class="bg-gradient-to-br from-[#123b2a] to-[#2a5240] p-8 text-white">
       <div class="flex items-center gap-3 mb-4">
         <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
@@ -207,121 +257,58 @@ function getAuthHTML(mode = 'signin') {
       <p class="text-white/80 text-sm">5-agent AI system for smarter farming decisions, worldwide.</p>
     </div>
 
-    <!-- Tab switcher -->
     <div class="flex border-b border-gray-100">
-      <button data-tab="signin" class="tab-btn flex-1 py-4 text-sm font-bold transition-colors ${isSignIn ? 'text-[#123b2a] border-b-2 border-[#123b2a]' : 'text-gray-400 hover:text-gray-600'}">
-        Sign In
-      </button>
-      <button data-tab="signup" class="tab-btn flex-1 py-4 text-sm font-bold transition-colors ${isSignUp ? 'text-[#123b2a] border-b-2 border-[#123b2a]' : 'text-gray-400 hover:text-gray-600'}">
-        Create Account
-      </button>
+      <button data-tab="signin" class="tab-btn flex-1 py-4 text-sm font-bold transition-colors ${isSignIn ? 'text-[#123b2a] border-b-2 border-[#123b2a]' : 'text-gray-400 hover:text-gray-600'}">Sign In</button>
+      <button data-tab="signup" class="tab-btn flex-1 py-4 text-sm font-bold transition-colors ${isSignUp ? 'text-[#123b2a] border-b-2 border-[#123b2a]' : 'text-gray-400 hover:text-gray-600'}">Create Account</button>
     </div>
 
     <div class="p-8">
-      <!-- Sign In Form -->
       <form id="signin-form" class="space-y-4 ${isSignIn ? '' : 'hidden'}">
         <div>
           <label class="text-xs font-bold uppercase tracking-wider text-gray-500 block mb-1">Email Address</label>
-          <input id="signin-email" type="email" required placeholder="you@example.com"
-            class="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm border-none focus:ring-2 focus:ring-[#123b2a]/20 outline-none transition-all"/>
+          <input id="signin-email" type="email" required placeholder="you@example.com" class="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm border-none focus:ring-2 focus:ring-[#123b2a]/20 outline-none transition-all"/>
         </div>
         <div>
           <label class="text-xs font-bold uppercase tracking-wider text-gray-500 block mb-1">Password</label>
           <div class="relative">
-            <input id="signin-password" type="password" required placeholder="••••••••"
-              class="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm border-none focus:ring-2 focus:ring-[#123b2a]/20 outline-none transition-all pr-12"/>
-            <button type="button" id="toggle-signin-pw" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-              <span class="material-symbols-outlined text-lg">visibility</span>
-            </button>
+            <input id="signin-password" type="password" required placeholder="••••••••" class="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm border-none focus:ring-2 focus:ring-[#123b2a]/20 outline-none transition-all pr-12"/>
+            <button type="button" id="toggle-signin-pw" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><span class="material-symbols-outlined text-lg">visibility</span></button>
           </div>
         </div>
-        <div class="flex justify-end">
-          <button type="button" id="forgot-pw-btn" class="text-xs text-[#123b2a] hover:underline font-medium">Forgot password?</button>
-        </div>
+        <div class="flex justify-end"><button type="button" id="forgot-pw-btn" class="text-xs text-[#123b2a] hover:underline font-medium">Forgot password?</button></div>
         <div id="signin-error" class="hidden p-3 bg-red-50 rounded-xl text-sm text-red-600 font-medium"></div>
-        <button type="submit" id="signin-btn"
-          class="w-full py-4 bg-[#123b2a] text-white rounded-xl font-headline font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-          <span class="material-symbols-outlined text-sm">login</span>
-          Sign In to Dashboard
-        </button>
+        <button type="submit" id="signin-btn" class="w-full py-4 bg-[#123b2a] text-white rounded-xl font-headline font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"><span class="material-symbols-outlined text-sm">login</span>Sign In to Dashboard</button>
       </form>
 
-      <!-- Sign Up Form -->
       <form id="signup-form" class="space-y-4 ${isSignUp ? '' : 'hidden'}">
-        <div>
-          <label class="text-xs font-bold uppercase tracking-wider text-gray-500 block mb-1">Email Address</label>
-          <input id="signup-email" type="email" required placeholder="you@example.com"
-            class="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm border-none focus:ring-2 focus:ring-[#123b2a]/20 outline-none"/>
-        </div>
+        <div><label class="text-xs font-bold uppercase tracking-wider text-gray-500 block mb-1">Email Address</label><input id="signup-email" type="email" required placeholder="you@example.com" class="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm border-none focus:ring-2 focus:ring-[#123b2a]/20 outline-none"/></div>
         <div>
           <label class="text-xs font-bold uppercase tracking-wider text-gray-500 block mb-1">Password</label>
           <div class="relative">
-            <input id="signup-password" type="password" required placeholder="Minimum 8 characters"
-              class="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm border-none focus:ring-2 focus:ring-[#123b2a]/20 outline-none pr-12"/>
-            <button type="button" id="toggle-signup-pw" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-              <span class="material-symbols-outlined text-lg">visibility</span>
-            </button>
+            <input id="signup-password" type="password" required placeholder="Minimum 8 characters" class="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm border-none focus:ring-2 focus:ring-[#123b2a]/20 outline-none pr-12"/>
+            <button type="button" id="toggle-signup-pw" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><span class="material-symbols-outlined text-lg">visibility</span></button>
           </div>
-          <div id="pw-strength" class="mt-1.5 flex gap-1">
-            ${['','','',''].map((_, i) => `<div data-bar="${i}" class="h-1 flex-1 rounded-full bg-gray-200 transition-all"></div>`).join('')}
-          </div>
+          <div id="pw-strength" class="mt-1.5 flex gap-1">${['', '', '', ''].map((_, i) => `<div data-bar="${i}" class="h-1 flex-1 rounded-full bg-gray-200 transition-all"></div>`).join('')}</div>
         </div>
-        <div>
-          <label class="text-xs font-bold uppercase tracking-wider text-gray-500 block mb-1">Confirm Password</label>
-          <input id="signup-confirm" type="password" required placeholder="Repeat password"
-            class="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm border-none focus:ring-2 focus:ring-[#123b2a]/20 outline-none"/>
-        </div>
+        <div><label class="text-xs font-bold uppercase tracking-wider text-gray-500 block mb-1">Confirm Password</label><input id="signup-confirm" type="password" required placeholder="Repeat password" class="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm border-none focus:ring-2 focus:ring-[#123b2a]/20 outline-none"/></div>
         <div id="signup-error" class="hidden p-3 bg-red-50 rounded-xl text-sm text-red-600 font-medium"></div>
-        <button type="submit" id="signup-btn"
-          class="w-full py-4 bg-[#123b2a] text-white rounded-xl font-headline font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-          <span class="material-symbols-outlined text-sm">person_add</span>
-          Create Free Account
-        </button>
-        <p class="text-[10px] text-center text-gray-400">By signing up you agree to our Terms of Service and Privacy Policy.</p>
+        <button type="submit" id="signup-btn" class="w-full py-4 bg-[#123b2a] text-white rounded-xl font-headline font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"><span class="material-symbols-outlined text-sm">person_add</span>Create Free Account</button>
       </form>
-
-      <!-- Features list -->
-      <div class="mt-6 pt-6 border-t border-gray-100 grid grid-cols-2 gap-2">
-        ${[
-          ['smart_toy', '5-Agent AI System'],
-          ['travel_explore', 'Global Coverage'],
-          ['biotech', 'Disease Scanner'],
-          ['trending_up', 'Market Intelligence'],
-        ].map(([icon, label]) => `
-          <div class="flex items-center gap-2 text-xs text-gray-500">
-            <span class="material-symbols-outlined text-[#123b2a] text-sm">${icon}</span>
-            ${label}
-          </div>`).join('')}
-      </div>
     </div>
   </div>`;
 }
-
-// ─── Init Auth ────────────────────────────────────────────────────────────────
 
 export async function initAuth() {
   const root = document.getElementById('auth-root');
   if (!root) return;
 
-  // Check if already logged in
   const session = await getSession();
-  if (session) {
-    // Check if onboarding complete
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single();
-
-    if (profile?.onboarding_complete) {
-      window.location.href = '/';
-    } else {
-      renderMode('onboard');
-    }
+  if (session?.user && session?.profile?.onboarding_complete) {
+    window.location.href = '/';
     return;
   }
 
-  renderMode('signin');
+  renderMode(session?.user ? 'onboard' : 'signin');
 
   function renderMode(mode) {
     root.innerHTML = getAuthHTML(mode);
@@ -329,15 +316,13 @@ export async function initAuth() {
   }
 
   function attachHandlers(mode) {
-    // Tab switching
-    document.querySelectorAll('.tab-btn').forEach(btn => {
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
       btn.addEventListener('click', () => renderMode(btn.dataset.tab));
     });
 
-    // Password visibility toggles
-    ['signin', 'signup'].forEach(prefix => {
+    ['signin', 'signup'].forEach((prefix) => {
       const toggle = document.getElementById(`toggle-${prefix}-pw`);
-      const input  = document.getElementById(`${prefix}-password`);
+      const input = document.getElementById(`${prefix}-password`);
       toggle?.addEventListener('click', () => {
         input.type = input.type === 'password' ? 'text' : 'password';
         toggle.querySelector('.material-symbols-outlined').textContent =
@@ -345,7 +330,6 @@ export async function initAuth() {
       });
     });
 
-    // Password strength indicator
     const pwInput = document.getElementById('signup-password');
     pwInput?.addEventListener('input', () => {
       const val = pwInput.value;
@@ -356,68 +340,66 @@ export async function initAuth() {
       });
     });
 
-    // Forgot password
     document.getElementById('forgot-pw-btn')?.addEventListener('click', () => renderMode('forgot'));
     document.getElementById('back-to-signin')?.addEventListener('click', () => renderMode('signin'));
 
-    // Forgot form
-    document.getElementById('forgot-form')?.addEventListener('submit', async (e) => {
+    document.getElementById('forgot-form')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const email = document.getElementById('forgot-email').value.trim();
       const errEl = document.getElementById('forgot-error');
       const sucEl = document.getElementById('forgot-success');
-      const btn   = document.getElementById('forgot-btn');
-      errEl.classList.add('hidden'); sucEl.classList.add('hidden');
-      btn.disabled = true; btn.textContent = 'Sending…';
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth.html?mode=reset`,
-      });
-      btn.disabled = false; btn.textContent = 'Send Reset Link';
-      if (error) { errEl.textContent = error.message; errEl.classList.remove('hidden'); }
-      else { sucEl.textContent = 'Reset link sent! Check your email.'; sucEl.classList.remove('hidden'); }
+      errEl.classList.add('hidden');
+      sucEl.classList.add('hidden');
+      const userExists = getUsers().some((user) => user.email.toLowerCase() === email.toLowerCase());
+      if (!userExists) {
+        errEl.textContent = 'No local account found for that email.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      sucEl.textContent = 'Local mode active: create a new account with a new email if password is lost.';
+      sucEl.classList.remove('hidden');
     });
 
-    // Sign In
     document.getElementById('signin-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email    = document.getElementById('signin-email').value.trim();
+      const email = document.getElementById('signin-email').value.trim().toLowerCase();
       const password = document.getElementById('signin-password').value;
-      const errEl    = document.getElementById('signin-error');
-      const btn      = document.getElementById('signin-btn');
+      const errEl = document.getElementById('signin-error');
+      const btn = document.getElementById('signin-btn');
       errEl.classList.add('hidden');
       btn.disabled = true;
       btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Signing in…';
 
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
+      const user = getUsers().find((item) => item.email.toLowerCase() === email && item.password === password);
+      if (!user) {
         btn.disabled = false;
         btn.innerHTML = '<span class="material-symbols-outlined text-sm">login</span> Sign In to Dashboard';
-        errEl.textContent = error.message;
+        errEl.textContent = 'Invalid email or password.';
         errEl.classList.remove('hidden');
         return;
       }
 
-      // Check onboarding
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
-      if (profile?.onboarding_complete) {
-        // Load prefs from profile
-        loadProfilePrefs(profile);
+      const cleanUser = sanitizeUser(user);
+      currentUser = cleanUser;
+      setSessionData({ user: cleanUser, profile: user.profile || null });
+
+      if (user.profile?.onboarding_complete) {
+        loadProfilePrefs(user.profile);
         window.location.href = '/';
       } else {
         renderMode('onboard');
       }
     });
 
-    // Sign Up
     document.getElementById('signup-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email    = document.getElementById('signup-email').value.trim();
+      const email = document.getElementById('signup-email').value.trim().toLowerCase();
       const password = document.getElementById('signup-password').value;
-      const confirm  = document.getElementById('signup-confirm').value;
-      const errEl    = document.getElementById('signup-error');
-      const btn      = document.getElementById('signup-btn');
-
+      const confirm = document.getElementById('signup-confirm').value;
+      const errEl = document.getElementById('signup-error');
+      const btn = document.getElementById('signup-btn');
       errEl.classList.add('hidden');
+
       if (password !== confirm) {
         errEl.textContent = 'Passwords do not match.';
         errEl.classList.remove('hidden');
@@ -428,171 +410,122 @@ export async function initAuth() {
         errEl.classList.remove('hidden');
         return;
       }
-
-      btn.disabled = true;
-      btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Creating account…';
-
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        btn.disabled = false;
-        btn.innerHTML = '<span class="material-symbols-outlined text-sm">person_add</span> Create Free Account';
-        errEl.textContent = error.message;
+      if (getUsers().some((item) => item.email.toLowerCase() === email)) {
+        errEl.textContent = 'This email is already registered.';
         errEl.classList.remove('hidden');
         return;
       }
 
-      // Go to onboarding
+      btn.disabled = true;
+      btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Creating account…';
+
+      const user = {
+        id: makeId(),
+        email,
+        password,
+        created_at: new Date().toISOString(),
+        profile: null,
+      };
+      const users = getUsers();
+      users.push(user);
+      saveUsers(users);
+
+      const cleanUser = sanitizeUser(user);
+      currentUser = cleanUser;
+      setSessionData({ user: cleanUser, profile: null });
+
       renderMode('onboard');
     });
 
-    // Onboarding
     document.getElementById('onboard-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const btn   = document.getElementById('ob-btn');
+      const btn = document.getElementById('ob-btn');
       const errEl = document.getElementById('ob-error');
       errEl.classList.add('hidden');
       btn.disabled = true;
       btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Setting up your farm…';
 
-      const { data: { user } } = await supabase.auth.getUser();
-
-      const profileData = {
-        id:                  user?.id,
-        full_name:           document.getElementById('ob-name').value.trim(),
-        phone:               document.getElementById('ob-phone').value.trim(),
-        country:             document.getElementById('ob-country').value.trim(),
-        state:               document.getElementById('ob-state').value.trim(),
-        city:                document.getElementById('ob-city').value.trim(),
-        district:            document.getElementById('ob-city').value.trim(),
-        primary_crop:        document.getElementById('ob-crop').value.trim(),
-        farm_size_acres:     parseFloat(document.getElementById('ob-farm-size').value) || 5,
-        language:            document.getElementById('ob-lang').value,
-        onboarding_complete: true,
-        created_at:          new Date().toISOString(),
-        updated_at:          new Date().toISOString(),
-      };
-
-      const { error } = await supabase.from('profiles').upsert(profileData);
-
-      if (error) {
+      const sessionData = getSessionData();
+      if (!sessionData?.user?.id) {
         btn.disabled = false;
         btn.innerHTML = '<span class="material-symbols-outlined text-sm">rocket_launch</span> Launch AgriIntel Dashboard';
-        errEl.textContent = error.message;
+        errEl.textContent = 'Session expired. Please sign in again.';
         errEl.classList.remove('hidden');
         return;
       }
 
-      // Save prefs locally
+      const profileData = {
+        id: sessionData.user.id,
+        full_name: document.getElementById('ob-name').value.trim(),
+        phone: document.getElementById('ob-phone').value.trim(),
+        country: document.getElementById('ob-country').value.trim(),
+        state: document.getElementById('ob-state').value.trim(),
+        city: document.getElementById('ob-city').value.trim(),
+        district: document.getElementById('ob-city').value.trim(),
+        primary_crop: document.getElementById('ob-crop').value.trim(),
+        farm_size_acres: parseFloat(document.getElementById('ob-farm-size').value) || 5,
+        language: document.getElementById('ob-lang').value,
+        onboarding_complete: true,
+        updated_at: new Date().toISOString(),
+      };
+
+      const users = getUsers();
+      const userIndex = users.findIndex((item) => item.id === sessionData.user.id);
+      if (userIndex === -1) {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined text-sm">rocket_launch</span> Launch AgriIntel Dashboard';
+        errEl.textContent = 'Account not found. Please sign in again.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      users[userIndex] = { ...users[userIndex], profile: profileData };
+      saveUsers(users);
+      setSessionData({ user: sanitizeUser(users[userIndex]), profile: profileData });
       loadProfilePrefs(profileData);
       window.location.href = '/';
     });
   }
 }
 
-function loadProfilePrefs(profile) {
-  const prefs = {
-    city:     profile.city     || profile.district || '',
-    district: profile.district || profile.city     || '',
-    state:    profile.state    || '',
-    country:  profile.country  || '',
-    language: profile.language || 'en',
-    crop:     profile.primary_crop || '',
-    farmSize: profile.farm_size_acres || 5,
-    fullName: profile.full_name || '',
-  };
-  try { localStorage.setItem('agriintel_prefs', JSON.stringify(prefs)); } catch {}
-}
-
-// ─── Auth Guard (use in main.js) ──────────────────────────────────────────────
-
 export async function requireAuth() {
   const session = await getSession();
-  if (!session) {
+  if (!session?.user) {
     window.location.href = '/auth.html';
     return null;
   }
 
-  // Check onboarding
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', session.user.id)
-    .single();
-
-  if (!profile?.onboarding_complete) {
+  const user = getUsers().find((item) => item.id === session.user.id);
+  if (!user?.profile?.onboarding_complete) {
     window.location.href = '/auth.html';
     return null;
   }
 
-  // Sync profile to localStorage
-  loadProfilePrefs(profile);
-
-  return { user: session.user, profile };
+  loadProfilePrefs(user.profile);
+  return { user: sanitizeUser(user), profile: user.profile };
 }
-
-// ─── Profile Update ───────────────────────────────────────────────────────────
 
 export async function updateProfile(updates) {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  const session = await getSession();
+  if (!session?.user?.id) return null;
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .update({ ...updates, updated_at: new Date().toISOString() })
-    .eq('id', user.id)
-    .select()
-    .single();
+  const users = getUsers();
+  const userIndex = users.findIndex((item) => item.id === session.user.id);
+  if (userIndex === -1) return { data: null, error: { message: 'User not found' } };
 
-  if (!error && data) loadProfilePrefs(data);
-  return { data, error };
+  const existingProfile = users[userIndex].profile || {};
+  const profile = {
+    ...existingProfile,
+    ...updates,
+    id: session.user.id,
+    onboarding_complete: true,
+    updated_at: new Date().toISOString(),
+  };
+
+  users[userIndex] = { ...users[userIndex], profile };
+  saveUsers(users);
+  setSessionData({ user: sanitizeUser(users[userIndex]), profile });
+  loadProfilePrefs(profile);
+
+  return { data: profile, error: null };
 }
-
-// ─── Supabase Schema SQL (run in Supabase SQL editor) ────────────────────────
-/*
-CREATE TABLE IF NOT EXISTS profiles (
-  id                  UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  full_name           TEXT,
-  phone               TEXT,
-  country             TEXT NOT NULL DEFAULT 'Unknown',
-  state               TEXT,
-  city                TEXT,
-  district            TEXT,
-  primary_crop        TEXT DEFAULT 'Wheat',
-  farm_size_acres     DECIMAL(10,2) DEFAULT 5,
-  language            TEXT DEFAULT 'en',
-  onboarding_complete BOOLEAN DEFAULT FALSE,
-  created_at          TIMESTAMPTZ DEFAULT NOW(),
-  updated_at          TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can read own profile"
-  ON profiles FOR SELECT USING (auth.uid() = id);
-
-CREATE POLICY "Users can insert own profile"
-  ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
-
-CREATE POLICY "Users can update own profile"
-  ON profiles FOR UPDATE USING (auth.uid() = id);
-
--- Feedback table (optional, for storing feedback)
-CREATE TABLE IF NOT EXISTS feedback_logs (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id         UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  suggestion_type TEXT,
-  actual_outcome  TEXT,
-  accuracy        TEXT,
-  crop            TEXT,
-  location        TEXT,
-  created_at      TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE feedback_logs ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can insert own feedback"
-  ON feedback_logs FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can read own feedback"
-  ON feedback_logs FOR SELECT USING (auth.uid() = user_id);
-*/
