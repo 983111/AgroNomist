@@ -4,7 +4,7 @@ import { renderSidebar } from './components/sidebar.js';
 import { renderTopbar } from './components/topbar.js';
 import { renderLocationModal, initLocationModal } from './components/location-modal.js';
 import { loadPrefs } from './services/api.js';
-import { requireAuth, signOut } from './auth.js';
+import { requireAuth, signOut, initAuth } from './auth.js';
 
 import { renderDashboard,      initDashboard      } from './pages/dashboard.js';
 import { renderResearch,       initResearch       } from './pages/research.js';
@@ -22,13 +22,35 @@ import { renderMultiAgent,     initMultiAgent     } from './pages/multiagent.js'
 
 async function bootstrap() {
   // Check auth before loading app
-  const authData = await requireAuth();
-  if (!authData) return; // requireAuth redirects if not logged in
+  const authData = await requireAuth({ redirect: false });
+
+  if (!authData) {
+    initAuthApp();
+    return;
+  }
 
   // Load saved preferences (may be overridden by profile data from auth)
   loadPrefs();
 
   initApp(authData);
+}
+
+function initAuthApp() {
+  const app = document.getElementById('app');
+  if (!app) return;
+
+  app.innerHTML = `
+    <div class="min-h-screen bg-[#f0f4f0] flex items-center justify-center p-4">
+      <div class="w-full max-w-md">
+        <div id="auth-root"></div>
+        <p class="text-center text-xs text-gray-400 mt-4">
+          🌍 Supporting farmers in 50+ countries worldwide
+        </p>
+      </div>
+    </div>
+  `;
+
+  initAuth();
 }
 
 function initApp(authData) {
