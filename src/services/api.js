@@ -3,9 +3,9 @@
  * All requests pass location + language context for global support.
  */
 
-const WORKER_URL = 'https://agriintel-worker.vishwajeetadkine705.workers.dev';
-const RESEARCH_ASSISTANT_URL = 'https://researchassistant.vishwajeetadkine705.workers.dev';
-const LAB_WORKER_URL = 'https://lab.vishwajeetadkine705.workers.dev';
+const WORKER_URL               = 'https://agriintel-worker.vishwajeetadkine705.workers.dev';
+const RESEARCH_ASSISTANT_URL   = 'https://researchassistant.vishwajeetadkine705.workers.dev';
+const LAB_WORKER_URL           = 'https://lab.vishwajeetadkine705.workers.dev';
 const RECOMMENDATION_WORKER_URL = 'https://recommendation.vishwajeetadkine705.workers.dev';
 
 // ─── Location & Language Store ────────────────────────────────────────────────
@@ -72,7 +72,6 @@ export async function streamChat(message, context = '', language, mode = 'defaul
 }
 
 export async function analyzeDisease({ base64Image, mimeType, crop }) {
-  // Send full locale context so GLM/K2 know the farm location
   const res = await post('/api/analyze', {
     base64Image,
     mimeType,
@@ -100,16 +99,32 @@ export async function getSoilIntelligence({ soilData, crop, season } = {}) {
   return res.json();
 }
 
-export async function getRecommendations({ state, season, soilType, farmSize, ph, n, p, k, rainfall, temperature } = {}) {
-  const res = await post('/api/recommendations', withLocale({
-    state: state || userPrefs.state,
-    season,
-    soilType,
-    farmSize,
-    soilData: { pH: ph, nitrogen: n, phosphorus: p, potassium: k },
-    rainfall,
-    temperature,
-  }), RECOMMENDATION_WORKER_URL);
+export async function getRecommendations({
+  state, district, season, soilType, farmSize,
+  soilData, ph, n, p, k, rainfall, temperature
+} = {}) {
+  // Build soilData object — accept either pre-built soilData or flat ph/n/p/k fields
+  const resolvedSoilData = soilData || {
+    pH:         ph         ?? 6.5,
+    nitrogen:   n          ?? 50,
+    phosphorus: p          ?? 40,
+    potassium:  k          ?? 60,
+  };
+
+  const res = await post('/api/recommendations', {
+    // Always pass locale fields explicitly
+    district: district || userPrefs.district,
+    state:    state    || userPrefs.state,
+    country:  userPrefs.country,
+    language: userPrefs.language,
+    // Farm parameters
+    season:   season   || 'kharif',
+    soilType: soilType || '',
+    farmSize: farmSize || 5,
+    soilData: resolvedSoilData,
+    rainfall:    rainfall    || 800,
+    temperature: temperature || 25,
+  }, RECOMMENDATION_WORKER_URL);
   return res.json();
 }
 
