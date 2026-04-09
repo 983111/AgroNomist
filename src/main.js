@@ -4,7 +4,7 @@ import { renderSidebar } from './components/sidebar.js';
 import { renderTopbar } from './components/topbar.js';
 import { renderLocationModal, initLocationModal } from './components/location-modal.js';
 import { loadPrefs } from './services/api.js';
-import { requireAuth, signOut, supabase } from './auth.js';
+import { requireAuth, signOut } from './auth.js';
 
 import { renderDashboard,      initDashboard      } from './pages/dashboard.js';
 import { renderResearch,       initResearch       } from './pages/research.js';
@@ -91,12 +91,6 @@ function initApp(authData) {
   const router = new Router(routes);
   router.start();
 
-  // Listen for auth changes
-  supabase.auth.onAuthStateChange((event) => {
-    if (event === 'SIGNED_OUT') {
-      window.location.href = '/auth.html';
-    }
-  });
 }
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
