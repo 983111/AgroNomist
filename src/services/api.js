@@ -1,19 +1,22 @@
 /**
- * AgriIntel K2 — API Service Layer
- * All requests pass location + language context for global support.
+ * AgriIntel K2 — API Service Layer v4.0
+ * Global support. All requests pass location + language context.
+ * New: multi-agent, what-if, autonomous mode endpoints.
  */
 
 const WORKER_URL = 'https://agriintel.vishwajeetadkine705.workers.dev';
 
-// ─── Location & Language Store ────────────────────────────────────────────────
+// ─── Global Location & Language Store ────────────────────────────────────────
 
 export const userPrefs = {
-  city:     'Nanded',
-  district: 'Nanded',
-  state:    'Maharashtra',
-  country:  'India',
+  city:     '',
+  district: '',
+  state:    '',
+  country:  '',
   language: 'en',
-  crop:     'Soybean',
+  crop:     '',
+  farmSize: 5,
+  fullName: '',
 };
 
 export function setPrefs(patch) {
@@ -46,7 +49,7 @@ async function post(path, body, baseUrl = WORKER_URL) {
 
 function withLocale(body) {
   return {
-    district: userPrefs.district,
+    district: userPrefs.district || userPrefs.city,
     state:    userPrefs.state,
     country:  userPrefs.country,
     language: userPrefs.language,
@@ -54,14 +57,14 @@ function withLocale(body) {
   };
 }
 
-// ─── K2 Endpoints ─────────────────────────────────────────────────────────────
+// ─── K2 / Multi-Agent Endpoints ───────────────────────────────────────────────
 
 export async function streamChat(message, context = '', language, mode = 'default') {
   const res = await post('/api/chat', withLocale({
     message, context,
     language: language || userPrefs.language,
     mode,
-    location: [userPrefs.city, userPrefs.district, userPrefs.country].filter(Boolean).join(', '),
+    location: [userPrefs.city || userPrefs.district, userPrefs.state, userPrefs.country].filter(Boolean).join(', '),
   }));
   return res.body;
 }
@@ -70,11 +73,48 @@ export async function analyzeDisease({ base64Image, mimeType, crop }) {
   const res = await post('/api/analyze', {
     base64Image, mimeType,
     crop:     crop || userPrefs.crop || '',
-    district: userPrefs.district,
+    district: userPrefs.district || userPrefs.city,
     state:    userPrefs.state,
     country:  userPrefs.country,
     language: userPrefs.language,
   });
+  return res.json();
+}
+
+export async function runMultiAgent({ crop, soil, rainfall, temperature, season, objective, agents } = {}) {
+  const res = await post('/api/multiagent', withLocale({
+    crop:        crop        || userPrefs.crop,
+    soil,
+    rainfall,
+    temperature,
+    season,
+    objective,
+    agents:      agents      || ['all'],
+  }));
+  return res.json();
+}
+
+export async function runAutonomous({ crop, soil, rainfall, temperature, farmSize, budget, constraints, objective } = {}) {
+  const res = await post('/api/autonomous', withLocale({
+    crop:        crop        || userPrefs.crop,
+    soil,
+    rainfall,
+    temperature,
+    farmSize:    farmSize    || userPrefs.farmSize,
+    budget,
+    constraints,
+    objective,
+  }));
+  return res.json();
+}
+
+export async function runWhatIf({ scenario, crop, currentStrategy } = {}) {
+  const res = await post('/api/whatif', withLocale({
+    scenario,
+    crop:            crop || userPrefs.crop,
+    currentStrategy,
+    location: [userPrefs.city || userPrefs.district, userPrefs.state, userPrefs.country].filter(Boolean).join(', '),
+  }));
   return res.json();
 }
 
@@ -98,16 +138,14 @@ export async function getRecommendations({
   soilData, rainfall, temperature,
 } = {}) {
   const res = await post('/api/recommendations', {
-    // Locale — always explicit for the recommendation worker
-    district: district || userPrefs.district,
-    state:    state    || userPrefs.state,
-    country:  userPrefs.country,
-    language: userPrefs.language,
-    // Farm parameters
-    season:      season   || 'kharif',
-    soilType:    soilType || '',
-    farmSize:    farmSize || 5,
-    soilData:    soilData || { pH: 6.5, nitrogen: 50, phosphorus: 40, potassium: 60 },
+    district:    district    || userPrefs.district || userPrefs.city,
+    state:       state       || userPrefs.state,
+    country:     userPrefs.country,
+    language:    userPrefs.language,
+    season:      season      || 'kharif',
+    soilType:    soilType    || '',
+    farmSize:    farmSize    || userPrefs.farmSize || 5,
+    soilData:    soilData    || { pH: 6.5, nitrogen: 50, phosphorus: 40, potassium: 60 },
     rainfall:    rainfall    || 800,
     temperature: temperature || 25,
   });
@@ -138,8 +176,10 @@ export async function submitFeedback({ suggestionType, originalSuggestion, actua
 
 export async function getSerperWeather() {
   const res = await post('/api/serper/weather', {
-    district: userPrefs.district, state: userPrefs.state,
-    country: userPrefs.country,   language: userPrefs.language,
+    district: userPrefs.district || userPrefs.city,
+    state:    userPrefs.state,
+    country:  userPrefs.country,
+    language: userPrefs.language,
   });
   return res.json();
 }
@@ -147,16 +187,20 @@ export async function getSerperWeather() {
 export async function getSerperMarket({ crop } = {}) {
   const res = await post('/api/serper/market', {
     crop:     crop || userPrefs.crop,
-    district: userPrefs.district, state: userPrefs.state,
-    country:  userPrefs.country,  language: userPrefs.language,
+    district: userPrefs.district || userPrefs.city,
+    state:    userPrefs.state,
+    country:  userPrefs.country,
+    language: userPrefs.language,
   });
   return res.json();
 }
 
 export async function getSerperNews({ crop, topic } = {}) {
   const res = await post('/api/serper/news', {
-    district: userPrefs.district, state: userPrefs.state,
-    country:  userPrefs.country,  crop, topic,
+    district: userPrefs.district || userPrefs.city,
+    state:    userPrefs.state,
+    country:  userPrefs.country,
+    crop, topic,
     language: userPrefs.language,
   });
   return res.json();
@@ -165,8 +209,10 @@ export async function getSerperNews({ crop, topic } = {}) {
 export async function getSerperPlaces({ query, category } = {}) {
   const res = await post('/api/serper/places', {
     query, category,
-    district: userPrefs.district, state: userPrefs.state,
-    country:  userPrefs.country,  language: userPrefs.language,
+    district: userPrefs.district || userPrefs.city,
+    state:    userPrefs.state,
+    country:  userPrefs.country,
+    language: userPrefs.language,
   });
   return res.json();
 }
