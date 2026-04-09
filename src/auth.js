@@ -85,7 +85,7 @@ export async function getSession() {
 export async function signOut() {
   clearSessionData();
   currentUser = null;
-  window.location.href = '/auth.html';
+  window.location.href = '/';
 }
 
 export function renderAuth() {
@@ -488,16 +488,16 @@ export async function initAuth() {
   }
 }
 
-export async function requireAuth() {
+export async function requireAuth({ redirect = true } = {}) {
   const session = await getSession();
   if (!session?.user) {
-    window.location.href = '/auth.html';
+    if (redirect) window.location.href = '/';
     return null;
   }
 
   const user = getUsers().find((item) => item.id === session.user.id);
   if (!user?.profile?.onboarding_complete) {
-    window.location.href = '/auth.html';
+    if (redirect) window.location.href = '/';
     return null;
   }
 
