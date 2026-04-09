@@ -3,9 +3,9 @@
  * All requests pass location + language context for global support.
  */
 
-const WORKER_URL               = 'https://agriintel-worker.vishwajeetadkine705.workers.dev';
-const RESEARCH_ASSISTANT_URL   = 'https://researchassistant.vishwajeetadkine705.workers.dev';
-const LAB_WORKER_URL           = 'https://lab.vishwajeetadkine705.workers.dev';
+const WORKER_URL                = 'https://agriintel-worker.vishwajeetadkine705.workers.dev';
+const RESEARCH_ASSISTANT_URL    = 'https://researchassistant.vishwajeetadkine705.workers.dev';
+const LAB_WORKER_URL            = 'https://lab.vishwajeetadkine705.workers.dev';
 const RECOMMENDATION_WORKER_URL = 'https://recommendation.vishwajeetadkine705.workers.dev';
 
 // ─── Location & Language Store ────────────────────────────────────────────────
@@ -47,7 +47,6 @@ async function post(path, body, baseUrl = WORKER_URL) {
   return res;
 }
 
-// Inject common locale fields into every request
 function withLocale(body) {
   return {
     district: userPrefs.district,
@@ -62,8 +61,7 @@ function withLocale(body) {
 
 export async function streamChat(message, context = '', language, mode = 'default') {
   const res = await post('/api/chat', withLocale({
-    message,
-    context,
+    message, context,
     language: language || userPrefs.language,
     mode,
     location: [userPrefs.city, userPrefs.district, userPrefs.country].filter(Boolean).join(', '),
@@ -73,8 +71,7 @@ export async function streamChat(message, context = '', language, mode = 'defaul
 
 export async function analyzeDisease({ base64Image, mimeType, crop }) {
   const res = await post('/api/analyze', {
-    base64Image,
-    mimeType,
+    base64Image, mimeType,
     crop:     crop || userPrefs.crop || '',
     district: userPrefs.district,
     state:    userPrefs.state,
@@ -101,27 +98,19 @@ export async function getSoilIntelligence({ soilData, crop, season } = {}) {
 
 export async function getRecommendations({
   state, district, season, soilType, farmSize,
-  soilData, ph, n, p, k, rainfall, temperature
+  soilData, rainfall, temperature,
 } = {}) {
-  // Build soilData object — accept either pre-built soilData or flat ph/n/p/k fields
-  const resolvedSoilData = soilData || {
-    pH:         ph         ?? 6.5,
-    nitrogen:   n          ?? 50,
-    phosphorus: p          ?? 40,
-    potassium:  k          ?? 60,
-  };
-
   const res = await post('/api/recommendations', {
-    // Always pass locale fields explicitly
+    // Locale — always explicit for the recommendation worker
     district: district || userPrefs.district,
     state:    state    || userPrefs.state,
     country:  userPrefs.country,
     language: userPrefs.language,
     // Farm parameters
-    season:   season   || 'kharif',
-    soilType: soilType || '',
-    farmSize: farmSize || 5,
-    soilData: resolvedSoilData,
+    season:      season   || 'kharif',
+    soilType:    soilType || '',
+    farmSize:    farmSize || 5,
+    soilData:    soilData || { pH: 6.5, nitrogen: 50, phosphorus: 40, potassium: 60 },
     rainfall:    rainfall    || 800,
     temperature: temperature || 25,
   }, RECOMMENDATION_WORKER_URL);
@@ -152,10 +141,8 @@ export async function submitFeedback({ suggestionType, originalSuggestion, actua
 
 export async function getSerperWeather() {
   const res = await post('/api/serper/weather', {
-    district: userPrefs.district,
-    state:    userPrefs.state,
-    country:  userPrefs.country,
-    language: userPrefs.language,
+    district: userPrefs.district, state: userPrefs.state,
+    country: userPrefs.country,   language: userPrefs.language,
   });
   return res.json();
 }
@@ -163,21 +150,16 @@ export async function getSerperWeather() {
 export async function getSerperMarket({ crop } = {}) {
   const res = await post('/api/serper/market', {
     crop:     crop || userPrefs.crop,
-    district: userPrefs.district,
-    state:    userPrefs.state,
-    country:  userPrefs.country,
-    language: userPrefs.language,
+    district: userPrefs.district, state: userPrefs.state,
+    country:  userPrefs.country,  language: userPrefs.language,
   });
   return res.json();
 }
 
 export async function getSerperNews({ crop, topic } = {}) {
   const res = await post('/api/serper/news', {
-    district: userPrefs.district,
-    state:    userPrefs.state,
-    country:  userPrefs.country,
-    crop,
-    topic,
+    district: userPrefs.district, state: userPrefs.state,
+    country:  userPrefs.country,  crop, topic,
     language: userPrefs.language,
   });
   return res.json();
@@ -185,12 +167,9 @@ export async function getSerperNews({ crop, topic } = {}) {
 
 export async function getSerperPlaces({ query, category } = {}) {
   const res = await post('/api/serper/places', {
-    query,
-    category,
-    district: userPrefs.district,
-    state:    userPrefs.state,
-    country:  userPrefs.country,
-    language: userPrefs.language,
+    query, category,
+    district: userPrefs.district, state: userPrefs.state,
+    country:  userPrefs.country,  language: userPrefs.language,
   });
   return res.json();
 }
