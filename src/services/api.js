@@ -3,10 +3,7 @@
  * All requests pass location + language context for global support.
  */
 
-const WORKER_URL                = 'https://agriintel-worker.vishwajeetadkine705.workers.dev';
-const RESEARCH_ASSISTANT_URL    = 'https://researchassistant.vishwajeetadkine705.workers.dev';
-const LAB_WORKER_URL            = 'https://lab.vishwajeetadkine705.workers.dev';
-const RECOMMENDATION_WORKER_URL = 'https://recommendation.vishwajeetadkine705.workers.dev';
+const WORKER_URL = 'https://agriintel.vishwajeetadkine705.workers.dev';
 
 // ─── Location & Language Store ────────────────────────────────────────────────
 
@@ -65,7 +62,7 @@ export async function streamChat(message, context = '', language, mode = 'defaul
     language: language || userPrefs.language,
     mode,
     location: [userPrefs.city, userPrefs.district, userPrefs.country].filter(Boolean).join(', '),
-  }), RESEARCH_ASSISTANT_URL);
+  }));
   return res.body;
 }
 
@@ -87,7 +84,7 @@ export async function getMarketData({ crop, landAcres } = {}) {
 }
 
 export async function runExperiment({ crop, soil, district, rainfall }) {
-  const res = await post('/api/experiment', withLocale({ crop, soil, district, rainfall }), LAB_WORKER_URL);
+  const res = await post('/api/experiment', withLocale({ crop, soil, district, rainfall }));
   return res.json();
 }
 
@@ -113,7 +110,7 @@ export async function getRecommendations({
     soilData:    soilData || { pH: 6.5, nitrogen: 50, phosphorus: 40, potassium: 60 },
     rainfall:    rainfall    || 800,
     temperature: temperature || 25,
-  }, RECOMMENDATION_WORKER_URL);
+  });
   return res.json();
 }
 
