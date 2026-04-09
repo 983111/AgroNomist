@@ -23,7 +23,9 @@ export function renderSidebar(activePath) {
          </a>`;
   }).join('');
 
-  return `<aside class="fixed left-0 top-0 h-screen w-64 z-50 bg-surface-container-low flex flex-col py-8 pr-4 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.08)]">
+  return `
+  <div id="mobile-sidebar-overlay" class="fixed inset-0 bg-black/30 z-40 hidden lg:hidden"></div>
+  <aside id="app-sidebar" class="fixed left-0 top-0 h-screen w-64 z-50 bg-surface-container-low flex flex-col py-8 pr-4 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.08)] transition-transform duration-300 lg:translate-x-0 -translate-x-full">
     <div class="px-6 mb-10">
       <div class="flex items-center gap-2 mb-1">
         <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings:'FILL' 1">agriculture</span>

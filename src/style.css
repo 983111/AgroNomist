@@ -42,3 +42,26 @@ body {
 #treatment-content h3 { font-size: 0.8rem; font-weight: 700; color: #2b5bb5; margin-top: 0.75rem; margin-bottom: 0.15rem; }
 #treatment-content li { margin-left: 1rem; font-size: 0.8rem; color: #424841; line-height: 1.6; }
 #treatment-content strong { font-weight: 700; }
+
+/* Mobile layout rescue */
+@media (max-width: 1023px) {
+  main {
+    margin-left: 0 !important;
+    padding: 1rem !important;
+  }
+
+  main.mt-16,
+  main.pt-16 {
+    margin-top: 4rem !important;
+    padding-top: 1rem !important;
+  }
+
+  [class*="grid-cols-12"],
+  [class*="grid-cols-4"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  [class*="col-span-"] {
+    grid-column: span 1 / span 1 !important;
+  }
+}

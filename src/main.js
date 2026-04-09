@@ -34,6 +34,37 @@ const routes = [
 
 const app = document.getElementById('app');
 
+function initMobileLayout() {
+  const sidebar = document.getElementById('app-sidebar');
+  const openBtn = document.getElementById('mobile-menu-btn');
+  const overlay = document.getElementById('mobile-sidebar-overlay');
+  if (!sidebar || !openBtn || !overlay) return;
+
+  const isDesktop = () => window.matchMedia('(min-width: 1024px)').matches;
+
+  const openSidebar = () => {
+    sidebar.classList.remove('-translate-x-full');
+    overlay.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+  };
+
+  const closeSidebar = () => {
+    if (isDesktop()) {
+      overlay.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+      return;
+    }
+    sidebar.classList.add('-translate-x-full');
+    overlay.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+  };
+
+  openBtn.addEventListener('click', openSidebar);
+  overlay.addEventListener('click', closeSidebar);
+  sidebar.querySelectorAll('a').forEach(link => link.addEventListener('click', closeSidebar));
+  window.addEventListener('resize', closeSidebar);
+}
+
 window.addEventListener('route-change', (e) => {
   const route = e.detail;
   app.innerHTML =
@@ -43,6 +74,7 @@ window.addEventListener('route-change', (e) => {
     route.render();
 
   requestAnimationFrame(() => {
+    initMobileLayout();
     if (route.init) route.init();
     initLocationModal();
   });
