@@ -3,7 +3,7 @@ const navItems = [
   { label: 'Multi-Agent AI',    icon: 'account_tree',     path: '/multiagent',  badge: 'NEW' },
   { label: 'Research',          icon: 'science',           path: '/research' },
   { label: 'Lab',               icon: 'biotech',           path: '/lab' },
-  { label: 'AI Recommendations',icon: 'psychology',        path: '/soil' },
+  { label: 'Soil Intelligence', icon: 'psychology',        path: '/soil' },
   { label: 'Disease',           icon: 'coronavirus',       path: '/disease' },
   { label: 'Weather',           icon: 'cloudy_snowing',    path: '/weather' },
   { label: 'Market',            icon: 'trending_up',       path: '/market' },
