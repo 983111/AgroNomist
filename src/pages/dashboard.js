@@ -390,10 +390,11 @@ export function initDashboard() {
   }
 
   loadInitial();
+  loadAI();
 
   cropSel?.addEventListener('change', () => { loadSerperMarket(); loadMarket(); });
   refreshBtn?.addEventListener('click', () => { loadInitial(); loadAI(); });
 
   // Refresh when user changes location
-  window.addEventListener('prefs-changed', loadInitial, { once: false });
+  window.addEventListener('prefs-changed', () => { loadInitial(); loadAI(); }, { once: false });
 }

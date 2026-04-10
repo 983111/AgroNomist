@@ -596,11 +596,13 @@ export function initWeather() {
 
   document.getElementById('fetch-weather')?.addEventListener('click', () => { loadInitial(); loadAI(); });
   loadInitial();
+  loadAI();
 
   // Refresh when prefs change
   window.addEventListener('prefs-changed', () => {
     const locLabel = document.getElementById('wx-loc-label');
     if (locLabel) locLabel.textContent = [userPrefs.city||userPrefs.district, userPrefs.state, userPrefs.country].filter(Boolean).join(', ');
     loadInitial();
+    loadAI();
   });
 }
