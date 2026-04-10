@@ -133,6 +133,25 @@ export async function getSoilIntelligence({ soilData, crop, season } = {}) {
   return res.json();
 }
 
+
+export async function getSoilIntelligenceDashboard({
+  state, district, season, soilType, farmSize, rainfall, temperature, soilData,
+} = {}) {
+  const res = await post('/api/recommendations', {
+    district: district || userPrefs.district || userPrefs.city,
+    state: state || userPrefs.state,
+    country: userPrefs.country,
+    language: userPrefs.language,
+    season: season || 'kharif',
+    soilType: soilType || '',
+    farmSize: farmSize || userPrefs.farmSize || 5,
+    soilData: soilData || { pH: 6.8, nitrogen: 42, phosphorus: 18, potassium: 245 },
+    rainfall: rainfall || 800,
+    temperature: temperature || 25,
+  });
+  return res.json();
+}
+
 export async function getRecommendations({
   state, district, season, soilType, farmSize,
   soilData, rainfall, temperature,
